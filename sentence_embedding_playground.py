@@ -1,3 +1,5 @@
+## APPROACH 1
+
 from transformers import AutoTokenizer, AutoModel
 import torch
 import torch.nn.functional as F
@@ -31,3 +33,12 @@ sentence_embeddings = F.normalize(sentence_embeddings, p=2, dim=1)
 
 print("Sentence embeddings:")
 print(sentence_embeddings)
+
+## APPROACH 2
+
+from sentence_transformers import SentenceTransformer
+sentences = ["This is an example sentence", "Each sentence is converted"]
+
+model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+embeddings = model.encode(sentences)
+print(embeddings)
