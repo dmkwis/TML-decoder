@@ -2,7 +2,7 @@ from transformers import pipeline
 import random
 generator = pipeline('text-generation', model='gpt2')
 current_sentence = ""
-num_gens = 100
+num_gens = 10
 step_size = 3
 cur_tokens = 0
 num_steps = 4
