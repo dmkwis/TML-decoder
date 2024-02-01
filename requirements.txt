@@ -44,3 +44,5 @@ transformers==4.35.2
 triton==2.1.0
 typing_extensions==4.8.0
 urllib3==2.1.0
+python-dotenv==1.0.1
+vec2text==0.0.11
