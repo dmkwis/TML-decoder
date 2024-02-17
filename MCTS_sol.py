@@ -1,17 +1,9 @@
-import random
+
 import math
-from transformers import pipeline, set_seed
-from sentence_transformers import SentenceTransformer
 from argparse import ArgumentParser
 from tqdm import tqdm
+import common_utils
 
-random.seed(42) # for reproducibility
-
-
-# OUR LLM + EMBEDDING SETUP
-set_seed(42)  # for reproducibility
-generator = pipeline("text-generation", model="gpt2")
-embedder = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
 
 # Hyperparemeters of the search - assigned with commandline arguments
 MAX_LEN = None
@@ -76,13 +68,13 @@ def uct_score(node):
     2. Considering only most humanlike sentence continuations.
 """
 def get_random_child(node):
-    result = generator(
+    result = common_utils.generator(
         node.state,  # sentence in node
         max_length=len(node.state) + step_size,  # setting max length
         num_return_sequences=num_gens,
         pad_token_id=50256 # Does nothing - default value for gpt-2
     )
-    child_state = random.choice(result)["generated_text"] # TODO: should this be weigthed by LLM perplexity?
+    child_state = common_utils.random.choice(result)["generated_text"] # TODO: should this be weigthed by LLM perplexity?
     child = Node(child_state, parent=node)
     if child_state not in node.children:
         node.children[child_state] = child
@@ -114,7 +106,7 @@ def is_terminal(node):
 
 def eval(state):
     global best_score, best_state
-    embedding = embedder.encode(state)
+    embedding = common_utils.embedder.encode(state)
     score = embedding @ target_embedding
     # Always when we eval state we check if this_state > best_state
     if score > best_score:
@@ -159,7 +151,7 @@ if __name__ == "__main__":
         "--step-size",
         type=int,
         help="How many characters should be generated at most in one step of MCTS.",
-        default=1,
+        default=2,
     )
     parser.add_argument(
         "--num-gens",
@@ -179,7 +171,7 @@ if __name__ == "__main__":
     target_phrase = (
         args.target_phrase
     )  # phrase that we want to obtain (unknown to the algorithm)
-    target_embedding = embedder.encode(
+    target_embedding = common_utils.embedder.encode(
         target_phrase
     )  # embedding of target_phrase (known to the algorithm)
 
