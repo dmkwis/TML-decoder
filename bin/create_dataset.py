@@ -176,6 +176,7 @@ def main(input_path: str, output_path: str, parent_category: str):
     df["category"] = pd.NA
 
     for category in categories:
+        category = category.replace("Category:", "")
         articles = find_articles(raw_df, category)
         df.loc[articles, "category"] = category
 
