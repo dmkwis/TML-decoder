@@ -187,7 +187,7 @@ def main(input_path: str, output_path: str, parent_category: str):
     df = clean_df(df)
 
     logger.info(f"Writing to file {output_path}")
-    df.to_json(output_path, orient="records", lines=False)
+    df.to_json(output_path, orient="records", indent=2)
 
 
 if __name__ == "__main__":
