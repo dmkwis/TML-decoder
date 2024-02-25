@@ -160,6 +160,7 @@ def find_articles(df: pd.DataFrame, category: str):
     logger.info(f"Finding articles for {category}")
 
     result = df["article"].str.contains(f"{category}")
+    result = result & ~df["title"].str.contains("Category:")
 
     logger.info(f"Found {result.sum()} articles for {category}")
 
