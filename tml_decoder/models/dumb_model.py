@@ -1,5 +1,5 @@
 from typing import Iterable
-from abstract_model import AbstractLabelModel
+from tml_decoder.models.abstract_model import AbstractLabelModel
 
 
 class DumbModel(AbstractLabelModel):

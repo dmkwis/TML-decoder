@@ -1,9 +1,9 @@
-from abstract_model import AbstractLabelModel
-from dumb_model import DumbModel
+from tml_decoder.models.abstract_model import AbstractLabelModel
+from tml_decoder.models.dumb_model import DumbModel
 import fire
 from typing import TypedDict
 import pandas as pd
-import common_utils
+import tml_decoder.utils.common_utils
 
 
 class ParsedDataset(TypedDict):
