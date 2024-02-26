@@ -1,9 +1,15 @@
-from abstract_model import AbstractLabelModel
-from dumb_model import DumbModel
+import os
+import neptune
 import fire
 from typing import TypedDict
 import pandas as pd
+from dotenv import load_dotenv
+
 import common_utils
+from abstract_model import AbstractLabelModel
+from dumb_model import DumbModel
+
+load_dotenv()
 
 
 class ParsedDataset(TypedDict):
@@ -49,6 +55,10 @@ def read_dataset(dataset_name: str) -> ParsedDataset:
 
 
 def main(model_name: str, dataset_name: str):
+    run = neptune.init_run(
+        project=os.getenv("NEPTUNE_PROJECT"),
+        api_token=os.getenv("NEPTUNE_API_TOKEN"),
+    )
     model = None
     dataset = None
     if model_name == "dumb":
@@ -58,6 +68,10 @@ def main(model_name: str, dataset_name: str):
     assert dataset is not None, f"Can't find dataset with name {dataset_name}"
     results = eval_model(model, dataset)
     print(f"metrics for {model.name}: ", results)
+
+    run["parameters"] = {"model_name": model_name}
+    run["eval"] = results
+    run.stop()
 
 
 if __name__ == "__main__":
