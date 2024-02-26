@@ -1,4 +1,4 @@
-from abstractmodel import AbstractLabelModel
+from abstract_model import AbstractLabelModel
 from dumb_model import DumbModel
 import fire
 from typing import TypedDict

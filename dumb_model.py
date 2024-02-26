@@ -1,5 +1,5 @@
 from typing import Iterable
-from abstractmodel import AbstractLabelModel
+from abstract_model import AbstractLabelModel
 
 
 class DumbModel(AbstractLabelModel):
