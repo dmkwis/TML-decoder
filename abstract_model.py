@@ -1,0 +1,17 @@
+from abc import ABC, abstractmethod, abstractproperty
+from typing import Iterable
+
+
+class AbstractLabelModel(ABC):
+    @abstractproperty
+    def name(self) -> str:
+        """Get name of the model"""
+        pass
+
+    @abstractmethod
+    def get_label(self, texts: Iterable[str]) -> str:
+        """
+        Abstract method to calculate the label for texts: Iterable[str].
+        Be careful not to provide infinite iterables.
+        """
+        pass

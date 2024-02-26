@@ -18,3 +18,16 @@ Then you can use `bin/create_dataset.py` script to generate dataset from the dum
 ```bash
 python bin/create_dataset.py --input_path='./.dump/wiki-dump.xml' --output_path='./dataset/diseases.json' --parent_category='Diseases by causing agent'
 ```
+
+To split the dataset use:
+```bash
+python create_split.py --dataset_dir='dataset/diseases.json' --save_dir='dataset_split'
+```
+
+To eval model use:
+```bash
+python3 eval_metrics.py --model_name='dumb' --dataset_name='diseases'
+```
+
+To create your own model please inherit from abstract class in `abstractmodel.py`.
+To eval your own model / dataset please add it in `eval_metrics.py`.
