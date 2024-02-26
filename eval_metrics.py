@@ -30,16 +30,19 @@ def eval_model(model: AbstractLabelModel, parsed_dataset: ParsedDataset):
     return result
 
 
-def read_diseases_dataset() -> ParsedDataset:
+def read_dataset(dataset_name: str) -> ParsedDataset:
     paths = {
-        "train": "dataset_split/diseases_train.json",
-        "test": "dataset_split/diseases_test.json",
-        "eval": "dataset_split/diseases_eval.json",
+        "train": f"dataset_split/{dataset_name}_train.json",
+        "test": f"dataset_split/{dataset_name}_test.json",
+        "eval": f"dataset_split/{dataset_name}_eval.json",
     }
     parsed_dataset = {}
     for split_name, path in paths.items():
-        with open(path, "r") as json_file:
-            dataframes_as_dicts = pd.read_json(json_file, typ="series")
+        try:
+            with open(path, "r") as json_file:
+                dataframes_as_dicts = pd.read_json(json_file, typ="series")
+        except IOError:
+            return None
         reconstructed_dataframes = [pd.DataFrame(data) for data in dataframes_as_dicts]
         parsed_dataset[split_name] = reconstructed_dataframes
     return parsed_dataset
@@ -51,8 +54,7 @@ def main(model_name: str, dataset_name: str):
     if model_name == "dumb":
         model = DumbModel()
     assert model is not None, f"Can't find model with name {model_name}"
-    if dataset_name == "diseases":
-        dataset = read_diseases_dataset()
+    dataset = read_dataset(dataset_name)
     assert dataset is not None, f"Can't find dataset with name {dataset_name}"
     results = eval_model(model, dataset)
     print(f"metrics for {model.name}: ", results)
