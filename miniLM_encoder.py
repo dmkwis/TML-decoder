@@ -18,4 +18,8 @@ class MiniLMEncoder(AbstractEncoder):
     
     def encode(self, text: str):
         return self.encoder.encode(text)
+    
+    @property
+    def name(self):
+        return "Mini LM"
 

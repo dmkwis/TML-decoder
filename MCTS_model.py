@@ -15,7 +15,7 @@ class MCTSModel(AbstractLabelModel):
 
     @property
     def name(self):
-        return "MCTS model"
+        return f"MCTS model, encoder: {self.encoder.name}, generator: {self.generator.name}"
 
     def get_embedding_to_revert(self, texts: Iterable[str]):
         encoded_texts = [self.encoder.encode(text) for text in texts]

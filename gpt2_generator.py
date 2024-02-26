@@ -18,3 +18,7 @@ class GPT2Generator(AbstractGenerator):
             pad_token_id=50256,  # default value for pad token in gpt2
         )
         return [res["generated_text"] for res in results] # for now returning only generated sentences, probabilities in the future?
+    
+    @property
+    def name(self):
+        return "GPT2"
