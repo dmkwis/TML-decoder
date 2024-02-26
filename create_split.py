@@ -48,16 +48,13 @@ def label_split(df: pd.DataFrame) -> list[pd.DataFrame]:
     return split
 
 
-def split_diseases(dataset_dir, save_dir):
-    assert (
-        "diseases.json" in dataset_dir
-    ), "This function can be only used to create splits for disesases dataset"
+def split(dataset_dir, save_dir, dataset_name):
     dataset_dir = Path(dataset_dir)
     save_dir = Path(save_dir)
     df = pd.read_json(dataset_dir)
     split_dfs: List[Tuple[str, pd.DataFrame]] = [
         (
-            save_dir / Path("diseases_" + split_name + ".json"),
+            save_dir / Path(f"{dataset_name}_" + split_name + ".json"),
             df[df["category"].isin(list(split_cols))],
         )
         for split_name, split_cols in DISEASES_SPLIT.items()
@@ -73,7 +70,8 @@ def split_diseases(dataset_dir, save_dir):
 
 def main(dataset_dir, save_dir):
     """If more datasets come, we need to choose them here"""
-    split_diseases(dataset_dir, save_dir)
+    dataset_name = Path(dataset_dir).stem
+    split(dataset_dir, save_dir, dataset_name)
 
 
 if __name__ == "__main__":
