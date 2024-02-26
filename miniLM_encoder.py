@@ -1,6 +1,6 @@
-import torch
 from abstract_encoder import AbstractEncoder
 from sentence_transformers import SentenceTransformer
+import numpy as np
 
 
 class MiniLMEncoder(AbstractEncoder):
@@ -12,9 +12,9 @@ class MiniLMEncoder(AbstractEncoder):
         return veca@vecb
     
     def average_embedding(self, embeddings):
-        stacked = torch.stack(embeddings)
-        emb_sum = torch.sum(stacked, dim=0)
-        return torch.nn.functional.normalize(emb_sum, p=2)
+        stacked = np.stack(embeddings)
+        emb_sum = np.sum(stacked, axis=0)
+        return emb_sum/np.linalg.norm(emb_sum)
     
     def encode(self, text: str):
         return self.encoder.encode(text)

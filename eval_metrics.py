@@ -1,3 +1,5 @@
+from MCTS_model import MCTSModel
+from abstract_encoder import AbstractEncoder
 from abstract_model import AbstractLabelModel
 from dumb_model import DumbModel
 import fire
@@ -12,7 +14,9 @@ class ParsedDataset(TypedDict):
     split: list[pd.DataFrame]
 
 
-def eval_model(model: AbstractLabelModel, parsed_dataset: ParsedDataset):
+def eval_model(
+    model: AbstractLabelModel, encoder: AbstractEncoder, parsed_dataset: ParsedDataset
+):
     result = {"train": {}, "test": {}, "eval": {}}
     for split_name, split in parsed_dataset.items():
         count_cos_sim = []
@@ -20,9 +24,7 @@ def eval_model(model: AbstractLabelModel, parsed_dataset: ParsedDataset):
             true_label = subgroup["category"][0]
             texts = list(subgroup["title"])
             generated_label = model.get_label(texts)
-            cos_sim = common_utils.embedder.encode(
-                true_label
-            ) @ common_utils.embedder.encode(generated_label)
+            cos_sim = encoder.encode(true_label) @ encoder.encode(generated_label)
             count_cos_sim.append(cos_sim)
         assert len(count_cos_sim) > 0, f"Length of {split_name} is 0"
         average_cos_sim = sum(count_cos_sim) / len(count_cos_sim)
@@ -51,12 +53,16 @@ def read_dataset(dataset_name: str) -> ParsedDataset:
 def main(model_name: str, dataset_name: str):
     model = None
     dataset = None
+    encoder = common_utils.get_encoder("MiniLM")
     if model_name == "dumb":
         model = DumbModel()
+    if model_name == "MCTS":
+        generator = common_utils.get_generator("gpt2")
+        model = MCTSModel(encoder, generator)
     assert model is not None, f"Can't find model with name {model_name}"
     dataset = read_dataset(dataset_name)
     assert dataset is not None, f"Can't find dataset with name {dataset_name}"
-    results = eval_model(model, dataset)
+    results = eval_model(model, encoder, dataset)
     print(f"metrics for {model.name}: ", results)
 
 
