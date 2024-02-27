@@ -69,7 +69,8 @@ def main(model_name: str, dataset_name: str):
     results = eval_model(model, dataset)
     print(f"metrics for {model.name}: ", results)
 
-    run["parameters"] = {"model_name": model_name}
+    run["dataset_name"] = dataset_name
+    run["parameters"] = {"model_name": model.name} # TODO There should be parameters of the model like hyperparameters
     run["eval"] = results
     run.stop()
 
