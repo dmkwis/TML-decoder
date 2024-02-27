@@ -3,7 +3,8 @@ from tml_decoder.models.dumb_model import DumbModel
 import fire
 from typing import TypedDict
 import pandas as pd
-import tml_decoder.utils.common_utils
+import tml_decoder.utils.common_utils as common_utils
+from tml_decoder.models.vec2text_model import Vec2TextModel
 
 
 class ParsedDataset(TypedDict):
@@ -53,6 +54,8 @@ def main(model_name: str, dataset_name: str):
     dataset = None
     if model_name == "dumb":
         model = DumbModel()
+    elif model_name == "vec2text":
+        model = Vec2TextModel()
     assert model is not None, f"Can't find model with name {model_name}"
     dataset = read_dataset(dataset_name)
     assert dataset is not None, f"Can't find dataset with name {dataset_name}"
