@@ -1,7 +1,5 @@
-from mcts_model import MCTSModel
 from abstract_encoder import AbstractEncoder
 from abstract_model import AbstractLabelModel
-from dumb_model import DumbModel
 import fire
 from typing import TypedDict
 import pandas as pd

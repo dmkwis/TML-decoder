@@ -1,10 +1,11 @@
 import math
+import random
 from typing import Iterable
 
 from tqdm import tqdm
 from abstract_encoder import AbstractEncoder
+from abstract_generator import AbstractGenerator
 from abstract_model import AbstractLabelModel
-import common_utils
 
 
 class Node:
@@ -37,8 +38,8 @@ def select(node):
 class MCTSModel(AbstractLabelModel):
     def __init__(
         self,
-        encoder: common_utils.AbstractEncoder,
-        generator: common_utils.AbstractGenerator,
+        encoder: AbstractEncoder,
+        generator: AbstractGenerator,
         iter_num=100,
         max_len=20,
     ) -> None:
@@ -69,7 +70,7 @@ class MCTSModel(AbstractLabelModel):
 
     def get_random_child(self, node):
         results = self.generator.generate(node.state)
-        child_state = common_utils.random.choice(
+        child_state = random.choice(
             results
         )  # TODO: should this be weighted by LLM perplexity?
         child = Node(child_state, self.encoder, self.target_embedding, parent=node)
