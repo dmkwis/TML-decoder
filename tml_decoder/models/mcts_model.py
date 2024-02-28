@@ -21,7 +21,7 @@ class Node:
         )  # Cos similarity for this sentence
 
     def get_unexplored_states(self):
-        return set(self.children.keys()).difference(self.all_states)
+        return list(set(self.all_states).difference(self.children.keys()))
     
     def is_fully_expanded(self):
         return len(self.get_unexplored_states()) == 0
@@ -34,11 +34,11 @@ class Node:
 
     def best_uct(self):
         exploration_weight = 1.41  # Adjust this parameter as needed
-        ucts = [child.value / (child.visits + 1e-6) +
+        ucts = {child.state: child.value / (child.visits + 1e-6) +
                 exploration_weight * math.sqrt(math.log(self.visits + 1) / (child.visits + 1e-6))
-                for child in self.children.values()]
-        best_child_index = ucts.index(max(ucts))
-        return self.children[best_child_index]
+                for child in self.children.values()}
+        best_child_state = max(ucts, key=ucts.get)
+        return self.children[best_child_state]
 
 class MCTSModel(AbstractLabelModel):
     def __init__(
@@ -46,7 +46,7 @@ class MCTSModel(AbstractLabelModel):
         encoder: AbstractEncoder,
         generator: AbstractGenerator,
         iter_num=100,
-        max_len=20,
+        max_len=15,
     ) -> None:
         super().__init__()
         self.encoder = encoder
@@ -69,8 +69,8 @@ class MCTSModel(AbstractLabelModel):
     def expand(self, node):
         unexplored_actions = node.get_unexplored_states()
         new_state = random.choice(unexplored_actions)
-        child = Node(new_state, parent=node)
-        node.children.append(child)
+        child = Node(new_state, self.encoder, self.generator, self.target_embedding, parent=node)
+        node.children[new_state] = child
         return child
 
     def select_node(self, node):
@@ -99,10 +99,10 @@ class MCTSModel(AbstractLabelModel):
     def mcts(self, initial_state, iterations, target_embedding):
         self.target_embedding = target_embedding
         root_node = Node(
-            initial_state, self.encoder, self.target_embedding
+            initial_state, self.encoder, self.generator, self.target_embedding
         )
 
-        for _ in tqdm(iterations, "MCTS progress"):
+        for _ in tqdm(range(iterations), "MCTS progress"):
             node = self.select_node(root_node)
             result = self.simulate(node)
             self.backpropagate(node, result)
@@ -110,10 +110,12 @@ class MCTSModel(AbstractLabelModel):
         def find_best_state(node):
             if len(node.children.values()) == 0:
                 return node
-            best_from_kids = find_best_state(node.children.values())
+            best_from_kids = max(map(lambda n: find_best_state(n), node.children.values()), key=lambda x: x.score)
             if node.score > best_from_kids.score:
                 return node
             return best_from_kids
+        
+        return find_best_state(root_node).state
 
     def get_label(self, texts: List[str]) -> str:
         target_embedding = self.get_embedding_to_revert(texts)

@@ -1,6 +1,6 @@
 from typing import Any
 from tml_decoder.encoders.abstract_encoder import AbstractEncoder
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, util
 from numpy import ndarray
 
 
@@ -10,7 +10,7 @@ class GtrBaseEncoder(AbstractEncoder):
         self.encoder = SentenceTransformer("sentence-transformers/gtr-t5-base")
     
     def similarity(self, veca: ndarray, vecb: ndarray) -> ndarray:
-        return veca @ vecb
+        return util.dot_score(veca, vecb)
     
     def average_embedding(self, embeddings: ndarray) -> ndarray:
         return embeddings.mean(axis=0, keepdims=True)

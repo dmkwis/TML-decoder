@@ -1,5 +1,5 @@
 from tml_decoder.encoders.abstract_encoder import AbstractEncoder
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, util
 import numpy as np
 
 
@@ -9,11 +9,12 @@ class MiniLMEncoder(AbstractEncoder):
         self.encoder = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
     
     def similarity(self, veca, vecb):
-        return veca@vecb
+        return util.dot_score(veca, vecb)
     
     def average_embedding(self, embeddings):
         stacked = np.stack(embeddings)
-        return np.sum(stacked, axis=0)
+        summed = np.sum(stacked, axis=0)
+        return summed / np.linalg.norm(summed)
     
     def encode(self, text: str) -> np.ndarray:
         result = self.encoder.encode(text)
