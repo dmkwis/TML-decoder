@@ -1,9 +1,10 @@
-
 import math
 from argparse import ArgumentParser
 from tqdm import tqdm
 import common_utils
 
+generator = None
+encoder = None
 
 # Hyperparemeters of the search - assigned with commandline arguments
 MAX_LEN = None
@@ -16,7 +17,7 @@ target_embedding = None
 
 # Best found state
 best_state = None
-best_score = -1.5 # score -1.5 as cos similiarity is in range [-1, 1]
+best_score = -1.5  # score -1.5 as cos similiarity is in range [-1, 1]
 
 
 """
@@ -28,19 +29,23 @@ best_score = -1.5 # score -1.5 as cos similiarity is in range [-1, 1]
         eval - value in this node
     Attributes visits and eval are essential to MCTS.
 """
+
+
 class Node:
     def __init__(self, state, parent=None):
         self.state = state
         self.parent = parent
         self.children = {}
         self.visits = 0
-        self.value = 0 # Value for MCTS search
-        self.score = float(eval(state)) # Cos similarity for this sentence
+        self.value = 0  # Value for MCTS search
+        self.score = float(eval(state))  # Cos similarity for this sentence
 
 
 """
     We're selecting a child which scores max on Upper Confidence Bound (UCT) score
 """
+
+
 def select(node):
     l = list(node.children.values())
     l.append(node)
@@ -52,6 +57,8 @@ def select(node):
     If node is not visited - assign infinity to it, else calculate the score with formula
     node_value / node_visits + sqrt(2 * ln(parent_visits) / node_visits)
 """
+
+
 def uct_score(node):
     if node.visits == 0:
         return float("inf")
@@ -67,14 +74,11 @@ def uct_score(node):
     1. Reducing search space.
     2. Considering only most humanlike sentence continuations.
 """
+
+
 def get_random_child(node):
-    result = common_utils.generator(
-        node.state,  # sentence in node
-        max_length=len(node.state) + step_size,  # setting max length
-        num_return_sequences=num_gens,
-        pad_token_id=50256 # Does nothing - default value for gpt-2
-    )
-    child_state = common_utils.random.choice(result)["generated_text"] # TODO: should this be weigthed by LLM perplexity?
+    results = generator.generate(node.state)
+    child_state = common_utils.random.choice(results) # TODO: should this be weighted by LLM perplexity?
     child = Node(child_state, parent=node)
     if child_state not in node.children:
         node.children[child_state] = child
@@ -106,7 +110,7 @@ def is_terminal(node):
 
 def eval(state):
     global best_score, best_state
-    embedding = common_utils.embedder.encode(state)
+    embedding = encoder.encode(state)
     score = embedding @ target_embedding
     # Always when we eval state we check if this_state > best_state
     if score > best_score:
@@ -118,7 +122,7 @@ def eval(state):
 
 def mcts(root_state, iterations):
     global best_state, best_score
-    root_node = Node(root_state) # Create root_node
+    root_node = Node(root_state)  # Create root_node
     best_state = root_node.state
     best_score = root_node.value
 
@@ -168,10 +172,17 @@ if __name__ == "__main__":
     MAX_LEN = args.max_len
     step_size = args.step_size
     num_gens = args.num_gens
+
+    ## INIT MODELS
+    generator = common_utils.get_generator(
+        "gpt2", step_size=step_size, num_gens=num_gens
+    )
+    encoder = common_utils.get_encoder("MiniLM")
+
     target_phrase = (
         args.target_phrase
     )  # phrase that we want to obtain (unknown to the algorithm)
-    target_embedding = common_utils.embedder.encode(
+    target_embedding = encoder.encode(
         target_phrase
     )  # embedding of target_phrase (known to the algorithm)
 
@@ -180,8 +191,3 @@ if __name__ == "__main__":
 
     # AFTER SEARCH FINISHES
     print("best state: ", best_state, " with similarity ", eval(best_state))
-
-    # def print_tree(node):
-    #    print(node.state)
-    #    for child in node.children.values():
-    #        print_tree(child)
