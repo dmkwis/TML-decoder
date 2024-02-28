@@ -1,6 +1,15 @@
-# tml-decoder
+# TML-decoder
 
-Team machine learning project for University of Warsaw in collaboration with Huawei - Generative decoder for sentence embeddings.
+Team machine learning project for the University of Warsaw in collaboration with Huawei - Generative decoder for sentence embeddings.
+
+## Setup
+
+### Env
+
+`.env` file contains secret keys, that shouldn't be shared. One should rename `.env_template` to `.env` and populate it with the correct credentials. 
+
+### Neptune
+https://app.neptune.ai/o/TML-Decoder/ is our project on Neptune. There one can find NEPTUNE_API_TOKEN for their account.
 
 ## Working with the code
 
