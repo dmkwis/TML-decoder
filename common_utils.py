@@ -7,7 +7,7 @@ from dumb_model import DumbModel
 
 from gpt2_generator import GPT2Generator
 from mcts_model import MCTSModel
-from miniLM_encoder import MiniLMEncoder
+from mini_lm_encoder import MiniLMEncoder
 
 
 ### If you're gonna use any embedder / generator make sure that they're initialized in this file
