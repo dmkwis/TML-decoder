@@ -6,6 +6,7 @@ import fire
 from typing import TypedDict
 import pandas as pd
 from dotenv import load_dotenv
+from tqdm import tqdm
 
 import tml_decoder.utils.common_utils as common_utils
 
@@ -24,7 +25,7 @@ def eval_model(
     result = {"train": {}, "test": {}, "eval": {}}
     for split_name, split in parsed_dataset.items():
         count_cos_sim = []
-        for subgroup in split:
+        for subgroup in tqdm(split, f"{split_name} split progress"):
             true_label = subgroup["category"][0]
             texts = list(subgroup["title"])
             generated_label = model.get_label(texts)

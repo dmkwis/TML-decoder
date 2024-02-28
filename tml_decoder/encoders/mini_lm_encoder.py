@@ -13,8 +13,7 @@ class MiniLMEncoder(AbstractEncoder):
     
     def average_embedding(self, embeddings):
         stacked = np.stack(embeddings)
-        emb_sum = np.sum(stacked, axis=0)
-        return emb_sum/np.linalg.norm(emb_sum)
+        return np.sum(stacked, axis=0)
     
     def encode(self, text: str):
         return self.encoder.encode(text)

@@ -3,6 +3,7 @@
 from transformers import AutoTokenizer, AutoModel
 import torch
 import torch.nn.functional as F
+import numpy as np
 
 #Mean Pooling - Take attention mask into account for correct averaging
 def mean_pooling(model_output, attention_mask):
@@ -37,8 +38,9 @@ print(sentence_embeddings)
 ## APPROACH 2
 
 from sentence_transformers import SentenceTransformer
-sentences = ["This is an example sentence", "Each sentence is converted"]
+sentences = ["This is an example sentence", "Each sentence is converted", "another sentence", "and the last one"]
 
 model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
 embeddings = model.encode(sentences)
 print(embeddings)
+print([np.linalg.norm(e)**2 for e in embeddings])
