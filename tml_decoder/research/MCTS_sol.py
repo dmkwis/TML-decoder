@@ -1,7 +1,7 @@
 import math
 from argparse import ArgumentParser
 from tqdm import tqdm
-import common_utils
+import tml_decoder.utils.common_utils as common_utils
 
 generator = None
 encoder = None

@@ -1,4 +1,4 @@
-from abstract_encoder import AbstractEncoder
+from tml_decoder.encoders.abstract_encoder import AbstractEncoder
 from sentence_transformers import SentenceTransformer
 import numpy as np
 

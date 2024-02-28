@@ -1,4 +1,4 @@
-from abstract_generator import AbstractGenerator
+from tml_decoder.generators.abstract_generator import AbstractGenerator
 from transformers import pipeline, set_seed
 
 

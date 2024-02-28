@@ -1,13 +1,13 @@
 from typing import Any
 import random
-from abstract_encoder import AbstractEncoder
-from abstract_generator import AbstractGenerator
-from abstract_model import AbstractLabelModel
-from dumb_model import DumbModel
+from tml_decoder.encoders.abstract_encoder import AbstractEncoder
+from tml_decoder.generators.abstract_generator import AbstractGenerator
+from tml_decoder.models.abstract_model import AbstractLabelModel
+from tml_decoder.models.dumb_model import DumbModel
 
-from gpt2_generator import GPT2Generator
-from mcts_model import MCTSModel
-from mini_lm_encoder import MiniLMEncoder
+from tml_decoder.generators.gpt2_generator import GPT2Generator
+from tml_decoder.models.mcts_model import MCTSModel
+from tml_decoder.encoders.mini_lm_encoder import MiniLMEncoder
 
 
 ### If you're gonna use any embedder / generator make sure that they're initialized in this file

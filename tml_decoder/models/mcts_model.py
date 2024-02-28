@@ -3,9 +3,9 @@ import random
 from typing import Iterable
 
 from tqdm import tqdm
-from abstract_encoder import AbstractEncoder
-from abstract_generator import AbstractGenerator
-from abstract_model import AbstractLabelModel
+from tml_decoder.encoders.abstract_encoder import AbstractEncoder
+from tml_decoder.generators.abstract_generator import AbstractGenerator
+from tml_decoder.models.abstract_model import AbstractLabelModel
 
 
 class Node:

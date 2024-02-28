@@ -1,5 +1,5 @@
-from abstract_encoder import AbstractEncoder
-from abstract_model import AbstractLabelModel
+from tml_decoder.encoders.abstract_encoder import AbstractEncoder
+from tml_decoder.models.abstract_model import AbstractLabelModel
 import os
 import neptune
 import fire
@@ -7,8 +7,7 @@ from typing import TypedDict
 import pandas as pd
 from dotenv import load_dotenv
 
-import common_utils
-from abstract_model import AbstractLabelModel
+import tml_decoder.utils.common_utils as common_utils
 
 load_dotenv()
 
