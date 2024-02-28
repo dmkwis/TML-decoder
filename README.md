@@ -6,9 +6,14 @@ Team machine learning project for the University of Warsaw in collaboration with
 
 ### Env
 
-`.env` file contains secret keys, that shouldn't be shared. One should rename `.env_template` to `.env` and populate it with the correct credentials. 
+`.env` file contains secret keys, that shouldn't be shared. One should base on `.env.default` to create `.env` and populate it with the correct credentials.
+
+```bash
+cp .env.default .env
+```
 
 ### Neptune
+
 https://app.neptune.ai/o/TML-Decoder/ is our project on Neptune. There one can find NEPTUNE_API_TOKEN for their account.
 
 ## Working with the code
@@ -29,14 +34,16 @@ python bin/create_dataset.py --input_path='./.dump/wiki-dump.xml' --output_path=
 ```
 
 To split the dataset use:
+
 ```bash
 python create_split.py --dataset_dir='dataset/diseases.json' --save_dir='dataset_split'
 ```
 
 To eval model use:
+
 ```bash
-python3 eval_metrics.py --model_name='dumb' --dataset_name='diseases'
+python3 bin/eval_metrics.py --model_name='dumb' --dataset_name='diseases' --encoder_name='miniLM'
 ```
 
-To create your own model please inherit from abstract class in `abstractmodel.py`.
-To eval your own model / dataset please add it in `eval_metrics.py`.
+To create your own model please inherit from abstract class in `abstract_model.py`.
+To eval your own model / dataset / encoder please add it in `utils/common_utils.py`.
