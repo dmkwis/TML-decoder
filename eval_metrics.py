@@ -48,24 +48,18 @@ def read_dataset(dataset_name: str) -> ParsedDataset:
             with open(path, "r") as json_file:
                 dataframes_as_dicts = pd.read_json(json_file, typ="series")
         except IOError:
-            return None
+            raise FileNotFoundError(f"File {path} not found")
         reconstructed_dataframes = [pd.DataFrame(data) for data in dataframes_as_dicts]
         parsed_dataset[split_name] = reconstructed_dataframes
     return parsed_dataset
 
 
-def main(model_name: str, dataset_name: str, encoder_name: str):
+def main(model_name: str, dataset_name: str, encoder_name: str) -> None:
     model = None
     dataset = None
     encoder = common_utils.get_encoder(encoder_name)
-    if model_name == "dumb":
-        model = DumbModel()
-    if model_name == "MCTS":
-        generator = common_utils.get_generator("gpt2")
-        model = MCTSModel(encoder, generator)
-    assert model is not None, f"Can't find model with name {model_name}"
+    model = common_utils.get_model(model_name, encoder=encoder)
     dataset = read_dataset(dataset_name)
-    assert dataset is not None, f"Can't find dataset with name {dataset_name}"
     results = eval_model(model, encoder, dataset)
     print(f"metrics for {model.name}: ", results)
 
