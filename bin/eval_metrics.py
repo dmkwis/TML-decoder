@@ -3,13 +3,18 @@ from tml_decoder.models.abstract_model import AbstractLabelModel
 import os
 import neptune
 import fire
-from typing import TypedDict
+from typing import Any, TypedDict
 import pandas as pd
 from dotenv import load_dotenv
 
 import tml_decoder.utils.common_utils as common_utils
 
 load_dotenv()
+
+run = neptune.init_run(
+    project=os.getenv("NEPTUNE_PROJECT"),
+    api_token=os.getenv("NEPTUNE_API_TOKEN"),
+)
 
 
 class ParsedDataset(TypedDict):
@@ -28,12 +33,15 @@ def eval_model(
             true_label = subgroup["category"][0]
             texts = list(subgroup["title"])
             generated_label = model.get_label(texts)
+
             true_label_embedding = encoder.encode(true_label)
             generated_label_embedding = encoder.encode(generated_label)
             cos_sim = encoder.similarity(
                 true_label_embedding, generated_label_embedding
             )
             count_cos_sim.append(cos_sim)
+
+            run[f"{split_name}/generated_label"].append({"category": true_label, "generated_label": generated_label, "cos_sim": cos_sim})
         assert len(count_cos_sim) > 0, f"Length of {split_name} is 0"
         average_cos_sim = sum(count_cos_sim) / len(count_cos_sim)
         result[split_name]["avg_cos_sim"] = average_cos_sim
@@ -58,21 +66,18 @@ def read_dataset(dataset_name: str) -> ParsedDataset:
     return parsed_dataset
 
 
-def main(model_name: str, dataset_name: str, encoder_name: str) -> None:
-    run = neptune.init_run(
-        project=os.getenv("NEPTUNE_PROJECT"),
-        api_token=os.getenv("NEPTUNE_API_TOKEN"),
-    )
-    model = None
-    dataset = None
+def main(model_name: str, dataset_name: str, encoder_name: str, *args: Any, **kwargs: Any) -> None:
+    run["dataset_name"] = dataset_name
+    run["parameters"] = { "model_name": model_name, "encoder_name": encoder_name, "args": args, "kwargs": kwargs } # TODO There should be parameters of the model like hyperparameters
+    
     encoder = common_utils.get_encoder(encoder_name)
-    model = common_utils.get_model(model_name, encoder=encoder)
+    model = common_utils.get_model(model_name, encoder, *args, **kwargs)
     dataset = read_dataset(dataset_name)
+    
     results = eval_model(model, encoder, dataset)
+
     print(f"metrics for {model.name}: ", results)
 
-    run["dataset_name"] = dataset_name
-    run["parameters"] = {"model_name": model.name} # TODO There should be parameters of the model like hyperparameters
     run["eval"] = results
     run.stop()
 

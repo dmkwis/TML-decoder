@@ -85,8 +85,8 @@ def get_model(name: str, encoder: AbstractEncoder, *args: Any, **kwargs: Any) ->
         return DumbModel(*args, **kwargs)
     if name == "MCTS":
         generator = get_generator("gpt2")
-        return MCTSModel(generator=generator, encoder=encoder, *args, **kwargs)
+        return MCTSModel(encoder, generator, *args, **kwargs)
     if name == "vec2text":
-        return Vec2TextModel(encoder=encoder)
+        return Vec2TextModel(encoder, *args, **kwargs)
 
     raise NotImplementedError(f"Model {name} not implemented")
