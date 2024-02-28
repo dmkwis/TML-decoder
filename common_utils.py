@@ -1,9 +1,9 @@
 from typing import Any
-from sentence_transformers import SentenceTransformer
 import random
 from abstract_encoder import AbstractEncoder
 from abstract_generator import AbstractGenerator
 from abstract_model import AbstractLabelModel
+from dumb_model import DumbModel
 
 from gpt2_generator import GPT2Generator
 from mcts_model import MCTSModel
@@ -77,7 +77,10 @@ def get_model(name: str, *args: Any, **kwargs: Any) -> AbstractLabelModel:
     Raises:
         NotImplementedError: If the model with the given name is not implemented.
     """
+    if name == "dumb":
+        return DumbModel(*args, **kwargs)
     if name == "MCTS":
-        return MCTSModel(*args, **kwargs)
+        generator = get_generator("gpt2")
+        return MCTSModel(generator=generator, *args, **kwargs)
 
     raise NotImplementedError(f"Model {name} not implemented")
