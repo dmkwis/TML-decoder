@@ -85,7 +85,7 @@ def get_model(name: str, encoder: AbstractEncoder, *args: Any, **kwargs: Any) ->
         return DumbModel(*args, **kwargs)
     if name == "MCTS":
         generator = get_generator("gpt2")
-        return MCTSModel(generator=generator, *args, **kwargs)
+        return MCTSModel(generator=generator, encoder=encoder, *args, **kwargs)
     if name == "vec2text":
         return Vec2TextModel(encoder=encoder)
 
