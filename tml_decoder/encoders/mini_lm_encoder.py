@@ -24,5 +24,4 @@ class MiniLMEncoder(AbstractEncoder):
     
     @property
     def name(self):
-        return "gtr-base"
-
+        return "Mini LM"
