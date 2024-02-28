@@ -6,7 +6,7 @@ import numpy as np
 
 
 class BeamSearchModel(AbstractLabelModel):
-    def __init__(self, encoder: AbstractEncoder, generator: AbstractGenerator, iter_num=20, beam_width=5) -> None:
+    def __init__(self, encoder: AbstractEncoder, generator: AbstractGenerator, iter_num=5, beam_width=1) -> None:
         super().__init__()
         self.encoder = encoder
         self.generator = generator
@@ -36,13 +36,13 @@ class BeamSearchModel(AbstractLabelModel):
             self.encoder.encode(initial_state), target_embedding
         )
 
-        beam = [best_state]
+        beam = [(best_state, best_score)]
 
-        for _ in range(iter_num):
+        for iter in range(iter_num):
             new_beam = []
 
-            for state in beam:
-                next_states, next_scores = self.generate_next_states(state)
+            for state, _ in beam:
+                next_states, next_scores = self.generate_next_states(state, target_embedding)
                 top_indices = np.argsort(next_scores)[-self.beam_width:]
                 top_idx = top_indices[0]
                 if next_scores[top_idx] > best_score:

@@ -11,9 +11,9 @@ class MiniLMEncoder(AbstractEncoder):
     def similarity(self, veca, vecb):
         return veca@vecb
     
-    def average_embedding(self, embeddings: np.ndarray) -> np.ndarray:
-        emb_sum = np.sum(embeddings, axis=0)
-        return emb_sum / np.linalg.norm(emb_sum)
+    def average_embedding(self, embeddings):
+        stacked = np.stack(embeddings)
+        return np.sum(stacked, axis=0)
     
     def encode(self, text: str) -> np.ndarray:
         result = self.encoder.encode(text)

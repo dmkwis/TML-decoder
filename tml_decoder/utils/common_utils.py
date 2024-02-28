@@ -4,6 +4,7 @@ from tml_decoder.encoders.abstract_encoder import AbstractEncoder
 from tml_decoder.encoders.gtr_base_encoder import GtrBaseEncoder
 from tml_decoder.generators.abstract_generator import AbstractGenerator
 from tml_decoder.models.abstract_model import AbstractLabelModel
+from tml_decoder.models.beam_search_model import BeamSearchModel
 from tml_decoder.models.dumb_model import DumbModel
 
 from tml_decoder.generators.gpt2_generator import GPT2Generator
