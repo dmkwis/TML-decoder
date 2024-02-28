@@ -42,7 +42,7 @@ python create_split.py --dataset_dir='dataset/diseases.json' --save_dir='dataset
 To eval model use:
 
 ```bash
-python3 bin/eval_metrics.py --model_name='dumb' --dataset_name='diseases' --encoder_name='miniLM'
+python3 bin/eval_metrics.py --model_name='dumb' --dataset_name='diseases' --encoder_name='MiniLM'
 ```
 
 To create your own model please inherit from abstract class in `abstract_model.py`.

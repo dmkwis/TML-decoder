@@ -79,7 +79,7 @@ def get_model(name: str, *args: Any, **kwargs: Any) -> AbstractLabelModel:
         NotImplementedError: If the model with the given name is not implemented.
     """
     if name == "dumb":
-        return DumbModel(*args, **kwargs)
+        return DumbModel()
     if name == "MCTS":
         generator = get_generator("gpt2")
         return MCTSModel(generator=generator, *args, **kwargs)
