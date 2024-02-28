@@ -83,7 +83,7 @@ def get_model(name: str, encoder: AbstractEncoder, *args: Any, **kwargs: Any) ->
         NotImplementedError: If the model with the given name is not implemented.
     """
     if name == "dumb":
-        return DumbModel(*args, **kwargs)
+        return DumbModel()
     if name == "MCTS":
         generator = get_generator("gpt2")
         return MCTSModel(encoder, generator, *args, **kwargs)
