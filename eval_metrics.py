@@ -24,7 +24,11 @@ def eval_model(
             true_label = subgroup["category"][0]
             texts = list(subgroup["title"])
             generated_label = model.get_label(texts)
-            cos_sim = encoder.encode(true_label) @ encoder.encode(generated_label)
+            true_label_embedding = encoder.encode(true_label)
+            generated_label_embedding = encoder.encode(generated_label)
+            cos_sim = encoder.similarity(
+                true_label_embedding, generated_label_embedding
+            )
             count_cos_sim.append(cos_sim)
         assert len(count_cos_sim) > 0, f"Length of {split_name} is 0"
         average_cos_sim = sum(count_cos_sim) / len(count_cos_sim)
@@ -50,10 +54,10 @@ def read_dataset(dataset_name: str) -> ParsedDataset:
     return parsed_dataset
 
 
-def main(model_name: str, dataset_name: str):
+def main(model_name: str, dataset_name: str, encoder_name: str):
     model = None
     dataset = None
-    encoder = common_utils.get_encoder("MiniLM")
+    encoder = common_utils.get_encoder(encoder_name)
     if model_name == "dumb":
         model = DumbModel()
     if model_name == "MCTS":
