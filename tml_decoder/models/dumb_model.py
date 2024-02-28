@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import List
 from tml_decoder.models.abstract_model import AbstractLabelModel
 
 
@@ -10,6 +10,6 @@ class DumbModel(AbstractLabelModel):
     def name(self):
         return "dumb model"
 
-    def get_label(self, texts: Iterable[str]) -> str:
+    def get_label(self, texts: List[str]) -> str:
         super().get_label(texts)
         return "Terrible label :("

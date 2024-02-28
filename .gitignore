@@ -4,6 +4,7 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.egg-info/
 
 .env
 
@@ -13,3 +14,4 @@ __pycache__/
 .DS_Store
 
 .dump
+.neptune
