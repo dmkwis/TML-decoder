@@ -1,9 +1,16 @@
 from abstract_encoder import AbstractEncoder
 from abstract_model import AbstractLabelModel
+import os
+import neptune
 import fire
 from typing import TypedDict
 import pandas as pd
+from dotenv import load_dotenv
+
 import common_utils
+from abstract_model import AbstractLabelModel
+
+load_dotenv()
 
 
 class ParsedDataset(TypedDict):
@@ -53,6 +60,10 @@ def read_dataset(dataset_name: str) -> ParsedDataset:
 
 
 def main(model_name: str, dataset_name: str, encoder_name: str) -> None:
+    run = neptune.init_run(
+        project=os.getenv("NEPTUNE_PROJECT"),
+        api_token=os.getenv("NEPTUNE_API_TOKEN"),
+    )
     model = None
     dataset = None
     encoder = common_utils.get_encoder(encoder_name)
@@ -60,6 +71,11 @@ def main(model_name: str, dataset_name: str, encoder_name: str) -> None:
     dataset = read_dataset(dataset_name)
     results = eval_model(model, encoder, dataset)
     print(f"metrics for {model.name}: ", results)
+
+    run["dataset_name"] = dataset_name
+    run["parameters"] = {"model_name": model.name} # TODO There should be parameters of the model like hyperparameters
+    run["eval"] = results
+    run.stop()
 
 
 if __name__ == "__main__":
