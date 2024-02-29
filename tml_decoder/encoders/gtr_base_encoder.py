@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 from tml_decoder.encoders.abstract_encoder import AbstractEncoder
 from sentence_transformers import SentenceTransformer, util
 from numpy import ndarray
@@ -24,6 +24,9 @@ class GtrBaseEncoder(AbstractEncoder):
               return result
         
         raise TypeError("Expected ndarray from self.encoder.encode, got {}".format(type(result)))
+    
+    def encode_batch(self, texts: List[str]) -> List[ndarray]:
+        return self.encoder.encode(texts)
     
     @property
     def name(self) -> str:

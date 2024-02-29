@@ -29,29 +29,46 @@ def eval_model(
 ):
     result = {"train": {}, "test": {}, "eval": {}}
     for split_name, split in parsed_dataset.items():
-        count_cos_sim = []
+        count_cos_sim_for_ground_truth = []
+        count_cos_sim_for_avg_emb = []
         for subgroup in tqdm(split, f"{split_name} split progress"):
             true_label = subgroup["category"][0]
             texts = list(subgroup["title"])
             generated_label = model.get_label(texts)
+            avg_embedding = encoder.average_embedding_for_texts(texts)
 
             true_label_embedding = encoder.encode(true_label)
             generated_label_embedding = encoder.encode(generated_label)
-            cos_sim = encoder.similarity(
+            cos_sim_for_ground_truth = encoder.similarity(
                 true_label_embedding, generated_label_embedding
             )
-            count_cos_sim.append(cos_sim)
+            cos_sim_for_avg_emb = encoder.similarity(
+                avg_embedding, generated_label_embedding
+            )
+            count_cos_sim_for_ground_truth.append(cos_sim_for_ground_truth)
+            count_cos_sim_for_avg_emb.append(cos_sim_for_avg_emb)
 
             run[f"{split_name}/generated_label"].append(
                 {
                     "category": true_label,
                     "generated_label": generated_label,
-                    "cos_sim": cos_sim,
+                    "cos_sim_for_ground_truth": cos_sim_for_ground_truth,
+                    "cos_sim_for_avg_emb": cos_sim_for_avg_emb,
                 }
             )
-        assert len(count_cos_sim) > 0, f"Length of {split_name} is 0"
-        average_cos_sim = sum(count_cos_sim) / len(count_cos_sim)
-        result[split_name]["avg_cos_sim"] = average_cos_sim
+
+        assert len(count_cos_sim_for_ground_truth) > 0, f"Length of {split_name} is 0"
+        average_cos_sim_for_gt = sum(count_cos_sim_for_ground_truth) / len(
+            count_cos_sim_for_ground_truth
+        )
+        average_cos_sim_for_avg_emb = sum(count_cos_sim_for_avg_emb) / len(
+            count_cos_sim_for_avg_emb
+        )
+        result[split_name]["avg_cos_sim_for_ground_truth"] = average_cos_sim_for_gt
+        result[split_name]["avg_cos_sim_for_avg_emb"] = average_cos_sim_for_avg_emb
+        run[f"{split_name}/avg_cos_sim_for_ground_truth"] = average_cos_sim_for_gt
+        run[f"{split_name}/avg_cos_sim_for_avg_emb"] = average_cos_sim_for_avg_emb
+
     return result
 
 
@@ -92,7 +109,7 @@ def main(
 
     print(f"metrics for {model.name}: ", results)
 
-    run["eval"] = results
+    run["results"] = results
     run.stop()
 
 

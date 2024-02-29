@@ -2,16 +2,23 @@ import torch
 
 from typing import List
 
-from numpy import stack
 from tml_decoder.encoders.abstract_encoder import AbstractEncoder
 from tml_decoder.models.abstract_model import AbstractLabelModel
 from vec2text import invert_embeddings, load_pretrained_corrector
 import vec2text
 from transformers import AutoTokenizer, AutoModel
 
+DEFAULT_DEVICE = None
+
+if torch.cuda.is_available():
+    DEFAULT_DEVICE = "cuda"
+elif torch.backends.mps.is_available():
+    DEFAULT_DEVICE = "mps"
+else:
+    DEFAULT_DEVICE = "cpu"
 
 class Vec2TextModel(AbstractLabelModel):
-    def __init__(self, encoder: AbstractEncoder, num_steps=10, device="mps"):
+    def __init__(self, encoder: AbstractEncoder, num_steps=10, device=DEFAULT_DEVICE):
         assert encoder.name == "gtr-base", "Vec2Text supports only gtr-base encoder"
 
         self.corrector = load_pretrained_corrector("gtr-base")
