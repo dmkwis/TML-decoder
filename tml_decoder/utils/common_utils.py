@@ -89,5 +89,7 @@ def get_model(name: str, encoder: AbstractEncoder, *args: Any, **kwargs: Any) ->
         return MCTSModel(encoder, generator, *args, **kwargs)
     if name == "vec2text":
         return Vec2TextModel(encoder, *args, **kwargs)
+    if name == "beam":
+        return BeamSearchModel(encoder, generator, *args, **kwargs)
 
     raise NotImplementedError(f"Model {name} not implemented")
