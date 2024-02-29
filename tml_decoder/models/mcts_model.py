@@ -48,12 +48,14 @@ class MCTSModel(AbstractLabelModel):
         generator: AbstractGenerator,
         iter_num=100,
         max_len=15,
+        min_result_len=3
     ) -> None:
         super().__init__()
         self.encoder = encoder
         self.generator = generator
         self.iter_num = iter_num
         self.max_len = max_len
+        self.min_result_len = min_result_len
         self.target_embedding = None
 
     @property
@@ -112,7 +114,7 @@ class MCTSModel(AbstractLabelModel):
             if len(node.children.values()) == 0:
                 return node
             best_from_kids = max(map(lambda n: find_best_state(n), node.children.values()), key=lambda x: x.score)
-            if node.score > best_from_kids.score:
+            if len(node.state) > self.min_result_len and node.score > best_from_kids.score:
                 return node
             return best_from_kids
         
