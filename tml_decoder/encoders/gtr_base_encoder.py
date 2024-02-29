@@ -1,7 +1,8 @@
-from typing import Any
+from typing import Any, List
 from tml_decoder.encoders.abstract_encoder import AbstractEncoder
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer, util
 from numpy import ndarray
+import numpy as np
 
 
 class GtrBaseEncoder(AbstractEncoder):
@@ -10,10 +11,11 @@ class GtrBaseEncoder(AbstractEncoder):
         self.encoder = SentenceTransformer("sentence-transformers/gtr-t5-base")
     
     def similarity(self, veca: ndarray, vecb: ndarray) -> ndarray:
-        return veca @ vecb
+        return util.dot_score(veca, vecb)
     
     def average_embedding(self, embeddings: ndarray) -> ndarray:
-        return embeddings.mean(axis=0, keepdims=True)
+        res = embeddings.sum(axis=0, keepdims=True)
+        return res/np.linalg.norm(res)
     
     def encode(self, text: str) -> ndarray:
         result = self.encoder.encode(text)
@@ -22,6 +24,9 @@ class GtrBaseEncoder(AbstractEncoder):
               return result
         
         raise TypeError("Expected ndarray from self.encoder.encode, got {}".format(type(result)))
+    
+    def encode_batch(self, texts: List[str]) -> List[ndarray]:
+        return self.encoder.encode(texts)
     
     @property
     def name(self) -> str:

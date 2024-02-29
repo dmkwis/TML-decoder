@@ -3,9 +3,8 @@ from transformers import pipeline, set_seed
 
 
 class GPT2Generator(AbstractGenerator):
-    def __init__(self, step_size=3, num_gens=50):
+    def __init__(self, step_size=2, num_gens=6):
         super().__init__()
-        set_seed(42)
         self.generator = pipeline("text-generation", model="gpt2")
         self.step_size = step_size
         self.num_gens = num_gens
