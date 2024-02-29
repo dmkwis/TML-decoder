@@ -6,6 +6,7 @@ from tqdm import tqdm
 from tml_decoder.encoders.abstract_encoder import AbstractEncoder
 from tml_decoder.generators.abstract_generator import AbstractGenerator
 from tml_decoder.models.abstract_model import AbstractLabelModel
+import numpy as np
 
 
 class Node:
@@ -60,7 +61,7 @@ class MCTSModel(AbstractLabelModel):
         return f"MCTS model, encoder: {self.encoder.name}, generator: {self.generator.name}"
 
     def get_embedding_to_revert(self, texts: List[str]):
-        encoded_texts = [self.encoder.encode(text) for text in texts]
+        encoded_texts = np.stack([self.encoder.encode(text) for text in texts])
         return self.encoder.average_embedding(encoded_texts)
     
     def is_terminal_node(self, node):

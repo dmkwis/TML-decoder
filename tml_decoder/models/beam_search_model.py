@@ -18,7 +18,7 @@ class BeamSearchModel(AbstractLabelModel):
         return f"MCTS model, encoder: {self.encoder.name}, generator: {self.generator.name}"
 
     def get_embedding_to_revert(self, texts: Iterable[str]):
-        encoded_texts = [self.encoder.encode(text) for text in texts]
+        encoded_texts = np.stack([self.encoder.encode(text) for text in texts])
         return self.encoder.average_embedding(encoded_texts)
 
     def get_label(self, texts: Iterable[str]) -> str:
