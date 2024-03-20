@@ -13,7 +13,7 @@ class AbstractEncoder(ABC):
         pass
 
     @abstractmethod
-    def similarity(self, veca: ndarray, vecb: ndarray) -> ndarray:
+    def similarity(self, veca: ndarray, vecb: ndarray) -> float:
         pass
 
     @abstractmethod
