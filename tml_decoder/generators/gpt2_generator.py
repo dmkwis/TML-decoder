@@ -1,22 +1,41 @@
 from tml_decoder.generators.abstract_generator import AbstractGenerator
-from transformers import pipeline, set_seed
+from transformers import AutoTokenizer, GPT2LMHeadModel
+import torch
 
+DEFAULT_DEVICE = None
+
+if torch.cuda.is_available():
+    DEFAULT_DEVICE = "cuda"
+elif torch.backends.mps.is_available():
+    DEFAULT_DEVICE = "mps"
+else:
+    DEFAULT_DEVICE = "cpu"
 
 class GPT2Generator(AbstractGenerator):
-    def __init__(self, step_size=2, num_gens=6):
+    def __init__(self, num_gens=3, device=DEFAULT_DEVICE):
         super().__init__()
-        self.generator = pipeline("text-generation", model="gpt2")
-        self.step_size = step_size
         self.num_gens = num_gens
+        self.device = device
+        self.gpt_tokenizer = AutoTokenizer.from_pretrained("openai-community/gpt2")
+        self.generator = GPT2LMHeadModel.from_pretrained("openai-community/gpt2").to(self.device)
 
     def generate(self, text: str):
-        results = self.generator(
-            text,  # sentence to continue
-            max_length=len(text) + self.step_size,  # only adding step size tokens
-            num_return_sequences=self.num_gens,
-            pad_token_id=50256,  # default value for pad token in gpt2
-        )
-        return [res["generated_text"] for res in results] # for now returning only generated sentences, probabilities in the future?
+        #hack: GPT2LMHeadModel does not support empty token seqs
+        if not text.strip():
+            text = self.gpt_tokenizer.eos_token
+
+        inputs = self.gpt_tokenizer(text, return_tensors="pt").to(self.device)
+        outputs = self.generator(**inputs)
+        logits = outputs.logits
+        top_k_indices = torch.topk(logits, self.num_gens, dim=-1).indices.flatten()
+
+        if text == self.gpt_tokenizer.eos_token:
+            text = ""
+
+        continuations = [text + self.gpt_tokenizer.decode(int(idx)) for idx in top_k_indices]
+        return continuations
+
+
     
     @property
     def name(self):
