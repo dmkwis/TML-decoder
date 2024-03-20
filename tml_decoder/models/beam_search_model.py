@@ -6,7 +6,7 @@ import numpy as np
 
 
 class BeamSearchModel(AbstractLabelModel):
-    def __init__(self, encoder: AbstractEncoder, generator: AbstractGenerator, iter_num=5, beam_width=1) -> None:
+    def __init__(self, encoder: AbstractEncoder, generator: AbstractGenerator, iter_num=100, beam_width=3) -> None:
         super().__init__()
         self.encoder = encoder
         self.generator = generator
@@ -15,7 +15,7 @@ class BeamSearchModel(AbstractLabelModel):
 
     @property
     def name(self):
-        return f"MCTS model, encoder: {self.encoder.name}, generator: {self.generator.name}"
+        return f"Beam search model, encoder: {self.encoder.name}, generator: {self.generator.name}"
 
     def get_embedding_to_revert(self, texts: Iterable[str]):
         encoded_texts = np.stack([self.encoder.encode(text) for text in texts])
