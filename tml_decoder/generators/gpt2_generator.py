@@ -21,7 +21,7 @@ class GPT2Generator(AbstractGenerator):
 
     def generate(self, text: str):
         #hack: GPT2LMHeadModel does not support empty token seqs
-        if not text.strip():
+        if text == "":
             text = self.gpt_tokenizer.eos_token
 
         inputs = self.gpt_tokenizer(text, return_tensors="pt").to(self.device)
