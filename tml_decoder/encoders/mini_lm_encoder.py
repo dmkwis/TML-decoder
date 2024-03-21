@@ -9,8 +9,8 @@ class MiniLMEncoder(AbstractEncoder):
         super().__init__()
         self.encoder = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
     
-    def similarity(self, veca: ndarray, vecb: ndarray):
-        return util.dot_score(veca, vecb)
+    def similarity(self, veca: ndarray, vecb: ndarray) -> float:
+        return util.dot_score(veca, vecb).item()
     
     def average_embedding(self, embeddings: ndarray) -> ndarray:
         summed = np.sum(embeddings, axis=0)

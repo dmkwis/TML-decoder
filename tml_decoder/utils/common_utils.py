@@ -90,6 +90,7 @@ def get_model(name: str, encoder: AbstractEncoder, *args: Any, **kwargs: Any) ->
     if name == "vec2text":
         return Vec2TextModel(encoder, *args, **kwargs)
     if name == "beam":
+        generator = get_generator("gpt2")
         return BeamSearchModel(encoder, generator, *args, **kwargs)
 
     raise NotImplementedError(f"Model {name} not implemented")

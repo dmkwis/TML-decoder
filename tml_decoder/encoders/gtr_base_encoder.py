@@ -10,8 +10,8 @@ class GtrBaseEncoder(AbstractEncoder):
         super().__init__()
         self.encoder = SentenceTransformer("sentence-transformers/gtr-t5-base")
     
-    def similarity(self, veca: ndarray, vecb: ndarray) -> ndarray:
-        return util.dot_score(veca, vecb)
+    def similarity(self, veca: ndarray, vecb: ndarray) -> float:
+        return util.dot_score(veca, vecb).item()
     
     def average_embedding(self, embeddings: ndarray) -> ndarray:
         res = embeddings.sum(axis=0, keepdims=True)

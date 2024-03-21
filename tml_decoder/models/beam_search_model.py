@@ -1,21 +1,28 @@
 from typing import Iterable
+import numpy as np
 from tml_decoder.encoders.abstract_encoder import AbstractEncoder
 from tml_decoder.generators.abstract_generator import AbstractGenerator
 from tml_decoder.models.abstract_model import AbstractLabelModel
-import numpy as np
-
 
 class BeamSearchModel(AbstractLabelModel):
-    def __init__(self, encoder: AbstractEncoder, generator: AbstractGenerator, iter_num=5, beam_width=1) -> None:
+    def __init__(
+        self,
+        encoder: AbstractEncoder,
+        generator: AbstractGenerator,
+        iter_num=100,
+        beam_width=5,
+        min_result_len=3,
+    ) -> None:
         super().__init__()
         self.encoder = encoder
         self.generator = generator
         self.iter_num = iter_num
         self.beam_width = beam_width
+        self.min_result_len = min_result_len
 
     @property
     def name(self):
-        return f"MCTS model, encoder: {self.encoder.name}, generator: {self.generator.name}"
+        return f"Beam search model, encoder: {self.encoder.name}, generator: {self.generator.name}"
 
     def get_embedding_to_revert(self, texts: Iterable[str]):
         encoded_texts = np.stack([self.encoder.encode(text) for text in texts])
@@ -24,33 +31,33 @@ class BeamSearchModel(AbstractLabelModel):
     def get_label(self, texts: Iterable[str]) -> str:
         target_embedding = self.get_embedding_to_revert(texts)
         return self.beam_search("", target_embedding, self.iter_num)
-    
+
     def generate_next_states(self, state, target_embedding):
         children = self.generator.generate(state)
-        scores = [self.encoder.similarity(self.encoder.encode(child), target_embedding) for child in children]
+        encodings = self.encoder.encode_batch(children)
+        scores = [
+            self.encoder.similarity(encoding, target_embedding)
+            for encoding in encodings
+        ]
         return children, scores
 
     def beam_search(self, initial_state, target_embedding, iter_num):
         best_state = initial_state
-        best_score = self.encoder.similarity(
-            self.encoder.encode(initial_state), target_embedding
-        )
+        best_score = float("-inf")
 
-        beam = [(best_state, best_score)]
+        beam = [(initial_state, best_score)]
 
-        for iter in range(iter_num):
+        for _ in range(iter_num):
+            print(beam)
             new_beam = []
-
             for state, _ in beam:
                 next_states, next_scores = self.generate_next_states(state, target_embedding)
-                top_indices = np.argsort(next_scores)[-self.beam_width:]
-                top_idx = top_indices[0]
-                if next_scores[top_idx] > best_score:
-                    best_score = next_scores[top_idx]
-                    best_state = next_states[top_idx]
-                new_beam.extend([(next_states[i], next_scores[i]) for i in top_indices])
+                new_beam.extend(zip(next_states, next_scores))
 
-            new_beam = sorted(new_beam, key=lambda x: x[1], reverse=True)
-            beam = new_beam[:self.beam_width]
-        
+            new_beam = sorted(new_beam, key=lambda x: x[1], reverse=True)[:self.beam_width]
+            if new_beam[0][1] > best_score and len(new_beam[0][0]) >= self.min_result_len:
+                best_state, best_score = new_beam[0]
+
+            beam = new_beam
+        print("bs: ", best_state, len(best_state))
         return best_state
