@@ -35,6 +35,8 @@ class GPT2Generator(AbstractGenerator):
         continuations = [text + self.gpt_tokenizer.decode(int(idx)) for idx in top_k_indices]
         return continuations
 
+    def get_tokenizer(self):
+        return self.gpt_tokenizer
 
     
     @property
