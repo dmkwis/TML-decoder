@@ -8,6 +8,8 @@ from tml_decoder.generators.abstract_generator import AbstractGenerator
 from tml_decoder.models.abstract_model import AbstractLabelModel
 import numpy as np
 
+from tml_decoder.models.guides.abstract_guide import AbstractGuide
+
 
 class Node:
     def __init__(self, state, encoder: AbstractEncoder, generator: AbstractGenerator, target_embedding, parent=None):
@@ -46,6 +48,7 @@ class MCTSModel(AbstractLabelModel):
         self,
         encoder: AbstractEncoder,
         generator: AbstractGenerator,
+        guide: AbstractGuide,
         iter_num=100,
         max_len=15,
         min_result_len=3
@@ -53,6 +56,7 @@ class MCTSModel(AbstractLabelModel):
         super().__init__()
         self.encoder = encoder
         self.generator = generator
+        self.guide = guide
         self.iter_num = iter_num
         self.max_len = max_len
         self.min_result_len = min_result_len
@@ -71,7 +75,7 @@ class MCTSModel(AbstractLabelModel):
     
     def expand(self, node):
         unexplored_actions = node.get_unexplored_states()
-        new_state = random.choice(unexplored_actions)
+        new_state = self.guide.choose_next(unexplored_actions, self.target_embedding)
         child = Node(new_state, self.encoder, self.generator, self.target_embedding, parent=node)
         node.children[new_state] = child
         return child
