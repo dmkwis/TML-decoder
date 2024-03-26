@@ -8,6 +8,9 @@ from tml_decoder.models.beam_search_model import BeamSearchModel
 from tml_decoder.models.dumb_model import DumbModel
 
 from tml_decoder.generators.gpt2_generator import GPT2Generator
+from tml_decoder.models.guides.abstract_guide import AbstractGuide
+from tml_decoder.models.guides.random_guide import RandomGuide
+from tml_decoder.models.guides.soft_prompt_guide import SoftPromptGuide
 from tml_decoder.models.mcts_model import MCTSModel
 from tml_decoder.encoders.mini_lm_encoder import MiniLMEncoder
 from tml_decoder.models.vec2text_model import Vec2TextModel
@@ -67,6 +70,28 @@ def get_encoder(name: str, *args: Any, **kwargs: Any) -> AbstractEncoder:
     raise NotImplementedError(f"Encoder {name} not implemented")
 
 
+def get_guide(name: str, encoder: AbstractEncoder, *args: Any, **kwargs: Any) -> AbstractGuide:
+    """
+    Returns a guide which helps in choosing the most promising node to expand
+    
+    Args:
+        name: The name of the guide.
+        *args: Variable length argument list.
+        **kwargs: Arbitrary keyword arguments.
+
+    Returns:
+        AbstractEncoder: An instance of the guide.
+
+    Raises:
+        NotImplementedError: If the specified guide is not implemented.
+    """
+    if name == "random":
+        return RandomGuide(*args, **kwargs)
+    if name == "soft-prompt":
+        return SoftPromptGuide(encoder)
+    
+    raise NotImplementedError(f"Guide {name} not implemented")
+
 def get_model(name: str, encoder: AbstractEncoder, *args: Any, **kwargs: Any) -> AbstractLabelModel:
     """
     Returns an instance of a model based on the given name.
@@ -86,7 +111,8 @@ def get_model(name: str, encoder: AbstractEncoder, *args: Any, **kwargs: Any) ->
         return DumbModel()
     if name == "MCTS":
         generator = get_generator("gpt2")
-        return MCTSModel(encoder, generator, *args, **kwargs)
+        guide = get_guide("soft-prompt", encoder)
+        return MCTSModel(encoder, generator, guide, *args, **kwargs)
     if name == "vec2text":
         return Vec2TextModel(encoder, *args, **kwargs)
     if name == "beam":
