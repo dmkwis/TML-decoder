@@ -153,7 +153,7 @@ def main(base_path: str = ".dump/Inspec", sample_size: int = 3, seed: int = 42):
     dataset_df = pd.DataFrame({"doc": docs, "keywords": filtered_keywords, "summary": [[keywords_descriptions[keyword] for keyword in keywords_list] for keywords_list in filtered_keywords]})
     dataset_df = dataset_df[dataset_df["summary"].apply(lambda x: len(x) > 0)]
 
-    dataset_df.to_json("dataset/inspec/dataset.json", orient="records", lines=True)
+    dataset_df.to_json("dataset/inspec/dataset.jsonl", orient="records", lines=True)
 
 if __name__ == "__main__":
     fire.Fire(main)
