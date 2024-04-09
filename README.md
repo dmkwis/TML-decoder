@@ -18,7 +18,7 @@ https://app.neptune.ai/o/TML-Decoder/ is our project on Neptune. There one can f
 
 ## Working with the code
 
-### Generating wiki dataset
+### Generating dataset
 
 First you need to download simple wiki dump from link. For the purposes of our project we used the dump from 20th of February 2024.
 
@@ -27,10 +27,10 @@ curl -o .dump/wiki-dump.xml.bz2 https://dumps.wikimedia.org/simplewiki/20240220/
 bzip2 -d .dump/wiki-dump.xml.bz2
 ```
 
-Then you can use `bin/create_wiki_dataset.py` script to generate dataset from the dump. The script will generate a dataset in the form of a JSON file with the following fields: `title`, `text`, `categories`. The `categories` column is a list of categories that the article belongs to. For the purpose of our project we used only articles that belong to the following categories: `Diseases by causing agent`.
+Then you can use `bin/create_dataset.py` script to generate dataset from the dump. The script will generate a dataset in the form of a JSON file with the following fields: `title`, `text`, `categories`. The `categories` column is a list of categories that the article belongs to. For the purpose of our project we used only articles that belong to the following categories: `Diseases by causing agent`.
 
 ```bash
-python bin/create_wiki_dataset.py --input_path='./.dump/wiki-dump.xml' --output_path='./dataset/diseases.json' --parent_category='Diseases by causing agent'
+python bin/create_dataset.py --input_path='./.dump/wiki-dump.xml' --output_path='./dataset/diseases.json' --parent_category='Diseases by causing agent'
 ```
 
 To split the dataset use:
