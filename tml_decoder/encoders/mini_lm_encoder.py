@@ -22,14 +22,14 @@ class MiniLMEncoder(AbstractEncoder):
         return summed / np.linalg.norm(summed)
     
     def encode(self, text: str) -> ndarray:
-        result = self.encoder.encode(text)
+        result = self.encoder.encode(text, show_progress_bar=False)
         if isinstance(result, ndarray):
             return result
         
         raise TypeError("Expected ndarray from self.encoder.encode, got {}".format(type(result)))
     
     def encode_batch(self, texts: List[str]) -> List[ndarray]:
-        return self.encoder.encode(texts)
+        return self.encoder.encode(texts, show_progress_bar=False)
     
 
     def tokenize_text(self, text: str) -> List[int]:
