@@ -41,7 +41,7 @@ class SoftPromptGuide(AbstractGuide):
             optimizer.zero_grad()
             output = self.encoder.raw_encode(input_ids, attention_mask)
             
-            loss = self.criterion(output.squeeze(), target_tensor, torch.tensor(1.0))
+            loss = self.criterion(output.squeeze(), target_tensor, torch.tensor(1.0).to(self.device))
             loss.backward()
             # set grad of non-new token to 0
             # all ids except new_token_id
