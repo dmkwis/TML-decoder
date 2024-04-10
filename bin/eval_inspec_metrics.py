@@ -10,9 +10,12 @@ import pandas as pd
 from dotenv import load_dotenv
 from tqdm import tqdm
 import os
-
-
+import logging
 import tml_decoder.utils.common_utils as common_utils
+
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 load_dotenv()
 
@@ -62,8 +65,7 @@ def eval_model(
             count_cos_sim_for_ground_truth.append(cos_sim_for_ground_truth)
             count_cos_sim_for_avg_emb.append(cos_sim_for_avg_emb)
 
-            
-            run[f"{split_name}/generated_label"].append(
+            logging.info(
                 {
                     "category": summary,
                     "generated_label": generated_label,

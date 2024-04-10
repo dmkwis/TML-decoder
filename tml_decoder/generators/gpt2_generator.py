@@ -14,19 +14,25 @@ class GPT2Generator(AbstractGenerator):
         self.generator = GPT2LMHeadModel.from_pretrained("openai-community/gpt2").to(self.device)
 
     def generate(self, text: str):
-        #hack: GPT2LMHeadModel does not support empty token seqs
         if text == "":
             text = self.gpt_tokenizer.eos_token
 
         inputs = self.gpt_tokenizer(text, return_tensors="pt").to(self.device)
         outputs = self.generator(**inputs)
         logits = outputs.logits
-        top_k_indices = torch.topk(logits, self.num_gens, dim=-1).indices.flatten()
 
-        if text == self.gpt_tokenizer.eos_token:
-            text = ""
+        # Only consider the last token's logits for top-k predictions
+        last_token_logits = logits[:, -1, :]  # Shape: [batch_size, vocab_size]
+        _, top_k_indices = torch.topk(last_token_logits, self.num_gens, dim=-1)  # Shape: [batch_size, num_gens]
+        
+        top_k_indices = top_k_indices.flatten()
 
         continuations = [text + self.gpt_tokenizer.decode(int(idx)) for idx in top_k_indices]
+
+        # If the initial text was empty and replaced with EOS token, remove it from the output
+        if text == self.gpt_tokenizer.eos_token:
+            continuations = [continuation.replace(self.gpt_tokenizer.eos_token, '', 1) for continuation in continuations]
+
         return continuations
 
     def get_tokenizer(self):
