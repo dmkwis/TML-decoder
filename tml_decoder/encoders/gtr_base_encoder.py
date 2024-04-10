@@ -43,7 +43,7 @@ class GtrBaseEncoder(AbstractEncoder):
         )
 
     def get_token_id(self, token: str) -> int:
-        raise self.encoder.tokenizer.vocab[token]
+        return self.encoder.tokenizer.vocab[token]
 
     def get_characteristic_tensor_for_token_id(self, token_id: int):
         return torch.tensor(
