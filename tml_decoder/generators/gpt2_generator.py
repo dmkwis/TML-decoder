@@ -2,17 +2,11 @@ from tml_decoder.generators.abstract_generator import AbstractGenerator
 from transformers import AutoTokenizer, GPT2LMHeadModel
 import torch
 
-DEFAULT_DEVICE = None
+from tml_decoder.utils.helper_functions import default_device
 
-if torch.cuda.is_available():
-    DEFAULT_DEVICE = "cuda"
-elif torch.backends.mps.is_available():
-    DEFAULT_DEVICE = "mps"
-else:
-    DEFAULT_DEVICE = "cpu"
 
 class GPT2Generator(AbstractGenerator):
-    def __init__(self, num_gens=3, device=DEFAULT_DEVICE):
+    def __init__(self, num_gens=3, device=default_device()):
         super().__init__()
         self.num_gens = num_gens
         self.device = device
@@ -35,6 +29,8 @@ class GPT2Generator(AbstractGenerator):
         continuations = [text + self.gpt_tokenizer.decode(int(idx)) for idx in top_k_indices]
         return continuations
 
+    def get_tokenizer(self):
+        return self.gpt_tokenizer
 
     
     @property
