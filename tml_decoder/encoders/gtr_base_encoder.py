@@ -84,7 +84,7 @@ class GtrBaseEncoder(AbstractEncoder):
         return self.encoder.tokenizer.vocab
 
     def get_embedding_for_token_id(self, token_id: int):
-        self.encoder[0]._modules["auto_model"]._modules["encoder"]._modules[
+        return self.encoder[0]._modules["auto_model"]._modules["encoder"]._modules[
             "embed_tokens"
         ]._parameters["weight"][token_id]
 
