@@ -15,6 +15,7 @@ from tml_decoder.models.mcts_model import MCTSModel
 from tml_decoder.encoders.mini_lm_encoder import MiniLMEncoder
 from tml_decoder.models.vec2text_model import Vec2TextModel
 
+import torch
 
 ### If you're gonna use any embedder / generator make sure that they're initialized in this file
 ### This is in order not to get confused and use different model for different experiments
@@ -24,6 +25,14 @@ from tml_decoder.models.vec2text_model import Vec2TextModel
 random.seed(42)  # for reproducibility
 
 # OUR LLM + EMBEDDING SETUP
+
+def default_device():
+    if torch.cuda.is_available():
+        return "cuda"
+    elif torch.backends.mps.is_available():
+        return "mps"
+    else:
+        return "cpu"
 
 
 def get_generator(name: str, *args: Any, **kwargs: Any) -> AbstractGenerator:

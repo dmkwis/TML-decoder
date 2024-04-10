@@ -2,17 +2,10 @@ from tml_decoder.generators.abstract_generator import AbstractGenerator
 from transformers import AutoTokenizer, GPT2LMHeadModel
 import torch
 
-DEFAULT_DEVICE = None
-
-if torch.cuda.is_available():
-    DEFAULT_DEVICE = "cuda"
-elif torch.backends.mps.is_available():
-    DEFAULT_DEVICE = "mps"
-else:
-    DEFAULT_DEVICE = "cpu"
+from tml_decoder.utils.common_utils import default_device
 
 class GPT2Generator(AbstractGenerator):
-    def __init__(self, num_gens=3, device=DEFAULT_DEVICE):
+    def __init__(self, num_gens=3, device=default_device()):
         super().__init__()
         self.num_gens = num_gens
         self.device = device

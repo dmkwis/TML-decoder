@@ -8,21 +8,13 @@ from torch import nn, optim
 from torch.optim.lr_scheduler import CosineAnnealingLR
 import torch
 
-DEFAULT_DEVICE = None
-
-if torch.cuda.is_available():
-    DEFAULT_DEVICE = "cuda"
-elif torch.backends.mps.is_available():
-    DEFAULT_DEVICE = "mps"
-else:
-    DEFAULT_DEVICE = "cpu"
-
+from tml_decoder.utils.common_utils import default_device
 
 class SoftPromptGuide(AbstractGuide):
     def __init__(
         self,
         encoder: AbstractEncoder,
-        device=DEFAULT_DEVICE
+        device=default_device()
     ):
         self.cache_score = {}
         self.encoder = encoder

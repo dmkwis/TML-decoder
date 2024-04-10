@@ -6,18 +6,10 @@ from sentence_transformers import SentenceTransformer, util
 import numpy as np
 from numpy import ndarray
 
-DEFAULT_DEVICE = None
-
-if torch.cuda.is_available():
-    DEFAULT_DEVICE = "cuda"
-elif torch.backends.mps.is_available():
-    DEFAULT_DEVICE = "mps"
-else:
-    DEFAULT_DEVICE = "cpu"
-
+from tml_decoder.utils.common_utils import default_device
 
 class MiniLMEncoder(AbstractEncoder):
-    def __init__(self, device=DEFAULT_DEVICE):
+    def __init__(self, device=default_device()):
         super().__init__()
         self.device = device
         self.encoder = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2").to(self.device)
