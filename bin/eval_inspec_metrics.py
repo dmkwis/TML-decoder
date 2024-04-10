@@ -16,10 +16,12 @@ import tml_decoder.utils.common_utils as common_utils
 
 load_dotenv()
 
-run = {}
-
 assert os.getenv("NEPTUNE_PROJECT") and os.getenv("NEPTUNE_API_TOKEN")
 
+run = neptune.init_run(
+    project=os.getenv("NEPTUNE_PROJECT"),
+    api_token=os.getenv("NEPTUNE_API_TOKEN"),
+)
 
 class ParsedDataset(TypedDict):
     train: Tuple[pd.DataFrame, pd.DataFrame]
@@ -60,8 +62,6 @@ def eval_model(
             count_cos_sim_for_ground_truth.append(cos_sim_for_ground_truth)
             count_cos_sim_for_avg_emb.append(cos_sim_for_avg_emb)
 
-            if run is None:
-                continue
             
             run[f"{split_name}/generated_label"].append(
                 {
