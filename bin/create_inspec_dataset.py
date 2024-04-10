@@ -1,3 +1,32 @@
+"""
+This script generates a dataset from the Inspec dataset. The dataset consists of a list of documents, a list of keywords
+associated with each document, and a summary of the documents associated with each keyword.
+
+The script reads the documents and keywords from the Inspec dataset, generates summaries for the documents associated
+with each keyword, and saves the dataset to the specified output directory. Documents used for generating summaries are
+sampled using `seed` and `sample_size` parameters.
+For the keywords that have only one document associated with them, the script does not generate summaries. We ignore
+these keywords because the summaries generated from a single document are not reliable.
+
+The script uses the OpenAI API to generate summaries. You need to have an OpenAI API key set in the `OPENAI_API_KEY`
+environment variable to use this script.
+
+Usage:
+    python bin/create_inspec_dataset.py --base_path .dump/Inspec --sample_size 3 --seed 42
+
+Arguments:
+    base_path: The base path where the Inspec dataset is located.
+    sample_size: The number of documents to sample for generating summaries.
+    seed: The seed to use for sampling documents.
+
+Output:
+    The script saves the dataset to the specified output directory. The dataset consists of a JSONL file containing
+    the documents, keywords, and summaries, and a CSV file containing the summaries for each keyword with the
+    documents it was generated from.
+
+    The output path is `dataset/inspec/dataset.jsonl` and `dataset/inspec/summaries.csv`.
+"""
+
 import json
 import random
 import re
@@ -146,6 +175,7 @@ def main(base_path: str = ".dump/Inspec", sample_size: int = 3, seed: int = 42):
 
     keyword_occurences = _get_keyword_occurences(keywords)
     keywords_descriptions: Dict[str, str] = {}
+    keyword_docs_sub: Dict[str, List[str]] = {}
 
     for keyword in tqdm(keyword_occurences.keys()):
         docs_sub = [docs[i] for i in keyword_occurences[keyword]]
@@ -156,6 +186,7 @@ def main(base_path: str = ".dump/Inspec", sample_size: int = 3, seed: int = 42):
         sample = random.sample(docs_sub, min(sample_size, len(docs_sub)))
 
         keywords_descriptions[keyword] = _generate_summary(client, sample, keyword)
+        keyword_docs_sub[keyword] = sample
 
     existing_keywords = list(keywords_descriptions.keys())
     filtered_keywords = [
@@ -164,7 +195,7 @@ def main(base_path: str = ".dump/Inspec", sample_size: int = 3, seed: int = 42):
     ]
 
     summaries_df = pd.DataFrame(
-        keywords_descriptions.items(), columns=["keyword", "description"]
+        {"keyword": list(keywords_descriptions.keys()), "description": list(keywords_descriptions.values()), "subs": list(keyword_docs_sub.values())}
     )
     summaries_df.to_csv("dataset/inspec/summaries.csv", index=False)
 
