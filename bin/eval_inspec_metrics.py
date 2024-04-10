@@ -18,13 +18,7 @@ load_dotenv()
 
 run = {}
 
-if os.getenv("NEPTUNE_PROJECT") and os.getenv("NEPTUNE_API"):
-    run = neptune.init_run(
-        project=os.getenv("NEPTUNE_PROJECT"),
-        api_token=os.getenv("NEPTUNE_API_TOKEN"),
-    )
-else:
-    run = None
+assert os.getenv("NEPTUNE_PROJECT") and os.getenv("NEPTUNE_API_TOKEN")
 
 
 class ParsedDataset(TypedDict):
@@ -117,16 +111,13 @@ def read_dataset(path: str, random_state: int = 42) -> ParsedDataset:
 def main(
     model_name: str, dataset_path: str, encoder_name: str, *args: Any, **kwargs: Any
 ) -> None:
-    if run is None:
-        print("Neptune is not initialized. Skipping logging")
-    else:
-      run["dataset_path"] = dataset_path
-      run["parameters"] = {
-          "model_name": model_name,
-          "encoder_name": encoder_name,
-          "args": args,
-          "kwargs": kwargs,
-      }
+    run["dataset_path"] = dataset_path
+    run["parameters"] = {
+        "model_name": model_name,
+        "encoder_name": encoder_name,
+        "args": args,
+        "kwargs": kwargs,
+    }
 
     encoder = common_utils.get_encoder(encoder_name)
     model = common_utils.get_model(model_name, encoder, *args, **kwargs)
@@ -135,9 +126,6 @@ def main(
     results = eval_model(model, encoder, dataset)
 
     print(f"Metrics for {model.name}: ", results)
-
-    if run is None:
-        return
     
     run["results"] = results
     run.stop()
