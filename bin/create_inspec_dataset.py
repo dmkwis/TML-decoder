@@ -147,18 +147,10 @@ def main(base_path: str = ".dump/Inspec", sample_size: int = 3, seed: int = 42):
     keyword_occurences = _get_keyword_occurences(keywords)
     keywords_descriptions: Dict[str, str] = {}
 
-    can_continue = False
     for keyword in tqdm(keyword_occurences.keys()):
         docs_sub = [docs[i] for i in keyword_occurences[keyword]]
 
         if len(docs_sub) == 1:
-            continue
-
-        #TODO: Jasiek should explain why we do it like that here
-        if keyword == "haemodynamics":
-            can_continue = True
-            continue
-        elif not can_continue:
             continue
 
         sample = random.sample(docs_sub, min(sample_size, len(docs_sub)))
