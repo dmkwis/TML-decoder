@@ -104,6 +104,7 @@ class MCTSModel(AbstractLabelModel):
             node = node.parent
 
     def mcts(self, initial_state, iterations, target_embedding):
+        self.guide.reset()
         self.target_embedding = target_embedding
         root_node = Node(
             initial_state, self.encoder, self.generator, self.target_embedding

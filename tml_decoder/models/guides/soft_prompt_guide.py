@@ -69,3 +69,6 @@ class SoftPromptGuide(AbstractGuide):
 
     def choose_next(self, propositions: List[str], target_embedding: ndarray) -> str:
         return max(propositions, key=lambda text: self._get_score(text, target_embedding))
+
+    def reset(self):
+        self.cache_score = {}

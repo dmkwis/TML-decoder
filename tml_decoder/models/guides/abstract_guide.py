@@ -8,3 +8,7 @@ class AbstractGuide(abc.ABC):
     @abstractmethod
     def choose_next(self, propositions: List[str], target_embedding: ndarray) -> str:
         raise NotImplementedError
+    
+    @abstractmethod
+    def reset(self):
+        raise NotImplementedError

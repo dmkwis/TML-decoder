@@ -7,3 +7,6 @@ import random
 class RandomGuide(AbstractGuide):
     def choose_next(self, propositions: List[str], target_embedding: ndarray) -> str:
         return random.choice(propositions)
+    
+    def reset(self):
+        pass
