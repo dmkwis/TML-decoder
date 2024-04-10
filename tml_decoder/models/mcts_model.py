@@ -49,9 +49,10 @@ class MCTSModel(AbstractLabelModel):
         encoder: AbstractEncoder,
         generator: AbstractGenerator,
         guide: AbstractGuide,
-        iter_num=100,
-        max_len=15,
-        min_result_len=3
+        iter_num: int =100,
+        max_len: int =15,
+        min_result_len: int =3,
+        initial_prompt: str = ""
     ) -> None:
         super().__init__()
         self.encoder = encoder
@@ -61,6 +62,7 @@ class MCTSModel(AbstractLabelModel):
         self.max_len = max_len
         self.min_result_len = min_result_len
         self.target_embedding = None
+        self.initial_prompt = initial_prompt
 
     @property
     def name(self):
@@ -127,4 +129,4 @@ class MCTSModel(AbstractLabelModel):
 
     def get_label(self, texts: List[str]) -> str:
         target_embedding = self.get_embedding_to_revert(texts)
-        return self.mcts("", self.iter_num, target_embedding)
+        return self.mcts(self.initial_prompt, self.iter_num, target_embedding)
