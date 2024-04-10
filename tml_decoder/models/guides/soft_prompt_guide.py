@@ -8,7 +8,7 @@ from torch import nn, optim
 from torch.optim.lr_scheduler import CosineAnnealingLR
 import torch
 
-from tml_decoder.utils.common_utils import default_device
+from tml_decoder.utils.helper_functions import default_device
 
 class SoftPromptGuide(AbstractGuide):
     def __init__(

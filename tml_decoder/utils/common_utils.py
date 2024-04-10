@@ -26,15 +26,6 @@ random.seed(42)  # for reproducibility
 
 # OUR LLM + EMBEDDING SETUP
 
-def default_device():
-    if torch.cuda.is_available():
-        return "cuda"
-    elif torch.backends.mps.is_available():
-        return "mps"
-    else:
-        return "cpu"
-
-
 def get_generator(name: str, *args: Any, **kwargs: Any) -> AbstractGenerator:
     """
     Returns a generator based on the given name.

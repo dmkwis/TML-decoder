@@ -2,7 +2,8 @@ from tml_decoder.generators.abstract_generator import AbstractGenerator
 from transformers import AutoTokenizer, GPT2LMHeadModel
 import torch
 
-from tml_decoder.utils.common_utils import default_device
+from tml_decoder.utils.helper_functions import default_device
+
 
 class GPT2Generator(AbstractGenerator):
     def __init__(self, num_gens=3, device=default_device()):

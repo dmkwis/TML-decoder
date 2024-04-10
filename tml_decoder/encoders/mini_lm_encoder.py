@@ -6,7 +6,7 @@ from sentence_transformers import SentenceTransformer, util
 import numpy as np
 from numpy import ndarray
 
-from tml_decoder.utils.common_utils import default_device
+from tml_decoder.utils.helper_functions import default_device
 
 class MiniLMEncoder(AbstractEncoder):
     def __init__(self, device=default_device()):

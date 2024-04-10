@@ -8,7 +8,7 @@ from vec2text import invert_embeddings, load_pretrained_corrector
 import vec2text
 from transformers import AutoTokenizer, AutoModel
 
-from tml_decoder.utils.common_utils import default_device
+from tml_decoder.utils.helper_functions import default_device
 
 class Vec2TextModel(AbstractLabelModel):
     def __init__(self, encoder: AbstractEncoder, num_steps=10, device=default_device()):
