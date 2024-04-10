@@ -60,7 +60,7 @@ class SoftPromptGuide(AbstractGuide):
         for token_id in range(len(self.encoder.get_tokenizer_vocab())):
             token_embedding = self.encoder.get_embedding_for_token_id(token_id).cpu().numpy()
             cossims.append(self.cs(torch.Tensor(token_embedding).unsqueeze(0), torch.Tensor(best_emb).unsqueeze(0)).item())
-        return max(cossims)
+        return -max(cossims)
 
     def _get_score(self, text: str, target_embedding: ndarray) -> float:
         if text not in self.cache_score:
