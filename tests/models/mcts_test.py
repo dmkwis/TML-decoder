@@ -25,8 +25,8 @@ def mcts_model(mock_encoder, mock_generator, mock_guide):
         generator=mock_generator,
         guide=mock_guide,
         iter_num=10,
-        max_len=15,
-        min_result_len=3,
+        max_len=100,
+        min_result_len=10,
         initial_prompt=initial_prompt,
     )
     return model
