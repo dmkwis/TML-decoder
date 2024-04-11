@@ -34,8 +34,10 @@ class ParsedDataset(TypedDict):
 
 def eval_model(
     model: AbstractLabelModel, encoder: AbstractEncoder, parsed_dataset: ParsedDataset
-):
+) -> Tuple[dict, dict]:
     result = {"train": {}, "test": {}, "eval": {}}
+    predictions = {"train": {}, "test": {}, "eval": {}}
+    
     for split_name, split in parsed_dataset.items():
         count_cos_sim_for_ground_truth = []
         count_cos_sim_for_avg_emb = []
@@ -73,6 +75,12 @@ def eval_model(
                     "cos_sim_for_avg_emb": cos_sim_for_avg_emb,
                 }
             )
+            
+            predictions[split_name][summary] = {
+                "generated_label": generated_label,
+                "cos_sim_for_ground_truth": cos_sim_for_ground_truth,
+                "cos_sim_for_avg_emb": cos_sim_for_avg_emb,
+            }
 
         assert len(count_cos_sim_for_ground_truth) > 0, f"Length of {split_name} is 0"
         average_cos_sim_for_gt = sum(count_cos_sim_for_ground_truth) / len(
@@ -90,7 +98,7 @@ def eval_model(
         run[f"{split_name}/avg_cos_sim_for_ground_truth"] = average_cos_sim_for_gt
         run[f"{split_name}/avg_cos_sim_for_avg_emb"] = average_cos_sim_for_avg_emb
 
-    return result
+    return result, predictions
 
 def read_dataset(path: str, random_state: int = 42) -> ParsedDataset:
     dataset = pd.read_json(path, lines=True)
@@ -125,11 +133,12 @@ def main(
     model = common_utils.get_model(model_name, encoder, *args, **kwargs)
     dataset = read_dataset(dataset_path)
 
-    results = eval_model(model, encoder, dataset)
+    results, predictions = eval_model(model, encoder, dataset)
 
     print(f"Metrics for {model.name}: ", results)
     
     run["results"] = results
+    run["predictions"] = predictions
     run.stop()
 
 
