@@ -7,6 +7,7 @@ from tml_decoder.encoders.abstract_encoder import AbstractEncoder
 from tml_decoder.generators.abstract_generator import AbstractGenerator
 from tml_decoder.models.abstract_model import AbstractLabelModel
 import numpy as np
+from tml_decoder.utils.soft_prompt import soft_prompt
 
 from tml_decoder.models.guides.abstract_guide import AbstractGuide
 
@@ -23,6 +24,11 @@ class Node:
         self.state = state
         self.parent = parent
         self.all_states = generator.generate(self.state)
+        soft_prompt_tokens = soft_prompt(encoder, state, target_embedding)
+        self.all_states += [
+            state + token if len(state) != 0 else token for token in soft_prompt_tokens
+        ]
+
         self.children = {}
         self.visits = 0
         self.value = 0  # Value for MCTS search
