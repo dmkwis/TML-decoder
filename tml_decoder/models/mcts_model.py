@@ -26,7 +26,8 @@ class Node:
         self.all_states = generator.generate(self.state)
         soft_prompt_tokens = soft_prompt(encoder, state, target_embedding)
         self.all_states += [
-            state + token if len(state) != 0 else token for token in soft_prompt_tokens
+            state + " " + token if len(state) != 0 else token
+            for token in soft_prompt_tokens
         ]
 
         self.children = {}
