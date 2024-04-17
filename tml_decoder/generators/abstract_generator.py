@@ -8,6 +8,10 @@ class AbstractGenerator(ABC):
     @abstractmethod
     def get_tokenizer(self):
         raise NotImplementedError
+    
+    @abstractmethod
+    def calculate_perplexity(self):
+        raise NotImplementedError
 
     @abstractproperty
     def name(self):

@@ -10,7 +10,7 @@ import numpy as np
 from tml_decoder.utils.soft_prompt import soft_prompt
 
 from tml_decoder.models.guides.abstract_guide import AbstractGuide
-
+from tml_decoder.metrics.perplexity_evaluator import GPT2PerplexityEvaluator
 
 class Node:
     def __init__(
@@ -20,6 +20,7 @@ class Node:
         generator: AbstractGenerator,
         target_embedding,
         parent=None,
+        perplexity_weight: float = 1e-4,
     ):
         self.state = state
         self.parent = parent
@@ -35,7 +36,7 @@ class Node:
         self.value = 0  # Value for MCTS search
         self.score = encoder.similarity(
             encoder.encode(self.state), target_embedding
-        )  # Cos similarity for this sentence
+        ) + perplexity_weight * generator.calculate_perplexity(self.state)
 
     def get_unexplored_states(self):
         return list(set(self.all_states).difference(self.children.keys()))

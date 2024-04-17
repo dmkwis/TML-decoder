@@ -12,7 +12,8 @@ class GPT2Generator(AbstractGenerator):
         self.device = device
         self.gpt_tokenizer = AutoTokenizer.from_pretrained("openai-community/gpt2")
         self.generator = GPT2LMHeadModel.from_pretrained("openai-community/gpt2").to(self.device)
-
+        self.generator.eval()
+        
     def generate(self, text: str):
         if text == "":
             text = self.gpt_tokenizer.eos_token
@@ -37,6 +38,24 @@ class GPT2Generator(AbstractGenerator):
 
     def get_tokenizer(self):
         return self.gpt_tokenizer
+
+    def calculate_perplexity(self, text: str) -> float:
+        tokens = self.gpt_tokenizer.encode(text, return_tensors="pt").to(self.device)
+        with torch.no_grad():
+            # Chunking for long texts
+            chunks = [tokens[0][i:i+self.generator.config.n_positions] for i in range(0, tokens.size(1), self.generator.config.n_positions-1)]
+            total_loss = 0
+            for chunk in chunks:
+                inputs = chunk.unsqueeze(0)
+                outputs = self.generator(inputs, labels=inputs)
+                total_loss += outputs.loss.item() * chunk.size(0)
+
+            if tokens.size(1) > 0:
+                avg_loss = total_loss / tokens.size(1)
+                perplexity = torch.exp(torch.tensor(avg_loss)).item()
+            else:
+                perplexity = float('inf')  # or some suitable default for empty text
+            return perplexity
 
     
     @property
