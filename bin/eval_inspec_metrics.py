@@ -67,15 +67,13 @@ def eval_model(
             count_cos_sim_for_ground_truth.append(cos_sim_for_ground_truth)
             count_cos_sim_for_avg_emb.append(cos_sim_for_avg_emb)
 
-            logging.info(
-                {
+            logging.info({
                     "category": summary,
                     "generated_label": generated_label,
                     "cos_sim_for_ground_truth": cos_sim_for_ground_truth,
                     "cos_sim_for_avg_emb": cos_sim_for_avg_emb,
-                }
-            )
-            
+                })
+
             predictions[split_name][summary] = {
                 "generated_label": generated_label,
                 "cos_sim_for_ground_truth": cos_sim_for_ground_truth,

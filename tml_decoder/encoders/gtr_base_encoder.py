@@ -1,4 +1,4 @@
-from typing import Any, List
+from typing import List, Union
 
 import torch
 from tml_decoder.encoders.abstract_encoder import AbstractEncoder
@@ -54,7 +54,7 @@ class GtrBaseEncoder(AbstractEncoder):
         for param in self.encoder.parameters():
             param.requires_grad = False
 
-    def unfreeze_embedding_weigths(self) -> None:
+    def unfreeze_embedding_weights(self) -> None:
         self.encoder[0]._modules["auto_model"]._modules["encoder"]._modules[
             "embed_tokens"
         ]._parameters["weight"].requires_grad = True
@@ -84,9 +84,24 @@ class GtrBaseEncoder(AbstractEncoder):
         return self.encoder.tokenizer.vocab
 
     def get_embedding_for_token_id(self, token_id: int):
-        return self.encoder[0]._modules["auto_model"]._modules["encoder"]._modules[
-            "embed_tokens"
-        ]._parameters["weight"][token_id]
+        return (
+            self.encoder[0]
+            ._modules["auto_model"]
+            ._modules["encoder"]
+            ._modules["embed_tokens"]
+            ._parameters["weight"][token_id]
+        )
+
+    def decode(self, token_ids: Union[int, List[int]]) -> str:
+        if isinstance(token_ids, int):
+            token_ids = [token_ids]
+        return self.encoder.tokenizer.decode(token_ids)
+
+    def train(self):
+        self.encoder.train()
+
+    def eval(self):
+        self.encoder.eval()
 
     @property
     def name(self) -> str:

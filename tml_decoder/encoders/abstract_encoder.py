@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod, abstractproperty
-from typing import Any, List
+from abc import ABC, abstractmethod
+from typing import List, Union
 from numpy import ndarray
 import numpy as np
 import torch
@@ -33,7 +33,7 @@ class AbstractEncoder(ABC):
     @abstractmethod
     def get_unused_token(self) -> str:
         raise NotImplementedError
-    
+
     @abstractmethod
     def get_token_id(self, token: str) -> int:
         raise NotImplementedError
@@ -47,7 +47,7 @@ class AbstractEncoder(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def unfreeze_embedding_weigths(self) -> None:
+    def unfreeze_embedding_weights(self) -> None:
         raise NotImplementedError
 
     @abstractmethod
@@ -76,6 +76,19 @@ class AbstractEncoder(ABC):
     def get_embedding_for_token_id(self, token_id: int):
         raise NotImplementedError
 
-    @abstractproperty
+    @abstractmethod
+    def decode(self, token_ids: Union[int, List[int]]) -> str:
+        raise NotImplementedError
+
+    @abstractmethod
+    def train(self):
+        raise NotImplementedError
+
+    @abstractmethod
+    def eval(self):
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
     def name(self) -> str:
         return "abstract-encoder"
