@@ -12,19 +12,29 @@ Team machine learning project for the University of Warsaw in collaboration with
 cp .env.default .env
 ```
 
+### Pre-commit
+
+The project uses pre-commit hooks to ensure that code standards are maintained. The main configuration for pre-commit hooks is defined in `.pre-commit-config.yaml`. This file specifies the hooks for `ruff`, `black`, and `isort`. The configuration for these tools is located in the `pyproject.toml` file. Ensure you have pre-commit installed and set up by running:
+
+bash
+```
+pre-commit install
+```
+This will install the pre-commit hooks into your local repository, ensuring that they are run before each commit to maintain code quality and consistency.
+
 ### Neptune
 
-https://app.neptune.ai/o/TML-Decoder/ is our project on Neptune. There one can find NEPTUNE_API_TOKEN for their account that should be put in `.env` file.
+https://app.neptune.ai/o/TML-Decoder/ is our project on Neptune. There one can find NEPTUNE_API_TOKEN for their account which should be put in the `.env` file.
 
 ### OpenAI
 
-GPT-4 is used for generating summaries when creating dataset. One needs to have an account on OpenAI platform and generate an API key. The key should be put in `.env` file.
+GPT-4 is used for generating summaries when creating a dataset. One needs to have an account on the OpenAI platform and generate an API key. The key should be put in the `.env` file.
 
 ## Working with the code
 
 ### Generating inspec dataset
 
-First you need to download inspec dump from link. For the purposes of our project we used the dump from 22nd March of 2024.
+First, you need to download inspec dump from link. For the purposes of our project we used the dump from 22nd March of 2024.
 
 ```bash
 wget -P .dump https://github.com/LIAAD/KeywordExtractor-Datasets/raw/master/datasets/Inspec.zi
