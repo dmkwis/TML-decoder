@@ -1,8 +1,11 @@
 from typing import Iterable
+
 import numpy as np
+
 from tml_decoder.encoders.abstract_encoder import AbstractEncoder
 from tml_decoder.generators.abstract_generator import AbstractGenerator
 from tml_decoder.models.abstract_model import AbstractLabelModel
+
 
 class BeamSearchModel(AbstractLabelModel):
     def __init__(
@@ -35,10 +38,7 @@ class BeamSearchModel(AbstractLabelModel):
     def generate_next_states(self, state, target_embedding):
         children = self.generator.generate(state)
         encodings = self.encoder.encode_batch(children)
-        scores = [
-            self.encoder.similarity(encoding, target_embedding)
-            for encoding in encodings
-        ]
+        scores = [self.encoder.similarity(encoding, target_embedding) for encoding in encodings]
         return children, scores
 
     def beam_search(self, initial_state, target_embedding, iter_num):
@@ -54,7 +54,7 @@ class BeamSearchModel(AbstractLabelModel):
                 next_states, next_scores = self.generate_next_states(state, target_embedding)
                 new_beam.extend(zip(next_states, next_scores))
 
-            new_beam = sorted(new_beam, key=lambda x: x[1], reverse=True)[:self.beam_width]
+            new_beam = sorted(new_beam, key=lambda x: x[1], reverse=True)[: self.beam_width]
             if new_beam[0][1] > best_score and len(new_beam[0][0]) >= self.min_result_len:
                 best_state, best_score = new_beam[0]
 

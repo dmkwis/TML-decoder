@@ -2,15 +2,15 @@ import math
 import random
 from typing import List
 
+import numpy as np
 from tqdm import tqdm
+
 from tml_decoder.encoders.abstract_encoder import AbstractEncoder
 from tml_decoder.generators.abstract_generator import AbstractGenerator
 from tml_decoder.models.abstract_model import AbstractLabelModel
-import numpy as np
+from tml_decoder.models.guides.abstract_guide import AbstractGuide
 from tml_decoder.utils.soft_prompt import soft_prompt
 
-from tml_decoder.models.guides.abstract_guide import AbstractGuide
-from tml_decoder.metrics.perplexity_evaluator import GPT2PerplexityEvaluator
 
 class Node:
     def __init__(
@@ -26,17 +26,12 @@ class Node:
         self.parent = parent
         self.all_states = generator.generate(self.state)
         soft_prompt_tokens = soft_prompt(encoder, state, target_embedding)
-        self.all_states += [
-            state + " " + token if len(state) != 0 else token
-            for token in soft_prompt_tokens
-        ]
+        self.all_states += [state + " " + token if len(state) != 0 else token for token in soft_prompt_tokens]
 
         self.children = {}
         self.visits = 0
         self.value = 0  # Value for MCTS search
-        self.score = encoder.similarity(
-            encoder.encode(self.state), target_embedding
-        ) + perplexity_weight * generator.calculate_perplexity(self.state)
+        self.score = encoder.similarity(encoder.encode(self.state), target_embedding) + perplexity_weight * generator.calculate_perplexity(self.state)
 
     def get_unexplored_states(self):
         return list(set(self.all_states).difference(self.children.keys()))
@@ -53,10 +48,7 @@ class Node:
     def best_uct(self):
         exploration_weight = 1.41  # Adjust this parameter as needed
         ucts = {
-            child.state: child.value / (child.visits + 1e-6)
-            + exploration_weight
-            * math.sqrt(math.log(self.visits + 1) / (child.visits + 1e-6))
-            for child in self.children.values()
+            child.state: child.value / (child.visits + 1e-6) + exploration_weight * math.sqrt(math.log(self.visits + 1) / (child.visits + 1e-6)) for child in self.children.values()
         }
         best_child_state = max(ucts, key=ucts.get)
         return self.children[best_child_state]
@@ -97,9 +89,7 @@ class MCTSModel(AbstractLabelModel):
     def expand(self, node):
         unexplored_actions = node.get_unexplored_states()
         new_state = self.guide.choose_next(unexplored_actions, self.target_embedding)
-        child = Node(
-            new_state, self.encoder, self.generator, self.target_embedding, parent=node
-        )
+        child = Node(new_state, self.encoder, self.generator, self.target_embedding, parent=node)
         node.children[new_state] = child
         return child
 
@@ -115,9 +105,7 @@ class MCTSModel(AbstractLabelModel):
         # Perform a random simulation from the current state and return the result
         while not self.is_terminal_node(node):
             new_state = random.choice(node.get_all_states())
-            new_node = Node(
-                new_state, self.encoder, self.generator, self.target_embedding, node
-            )
+            new_node = Node(new_state, self.encoder, self.generator, self.target_embedding, node)
             node.children[new_state] = new_node
             node = new_node
         return node.get_score()
@@ -131,9 +119,7 @@ class MCTSModel(AbstractLabelModel):
     def mcts(self, initial_state, iterations, target_embedding):
         self.guide.reset()
         self.target_embedding = target_embedding
-        root_node = Node(
-            initial_state, self.encoder, self.generator, self.target_embedding
-        )
+        root_node = Node(initial_state, self.encoder, self.generator, self.target_embedding)
 
         for _ in tqdm(range(iterations), "MCTS progress"):
             node = self.select_node(root_node)
@@ -147,10 +133,7 @@ class MCTSModel(AbstractLabelModel):
                 map(lambda n: find_best_state(n), node.children.values()),
                 key=lambda x: x.score,
             )
-            if (
-                len(node.state) > self.min_result_len
-                and node.score > best_from_kids.score
-            ):
+            if len(node.state) > self.min_result_len and node.score > best_from_kids.score:
                 return node
             return best_from_kids
 

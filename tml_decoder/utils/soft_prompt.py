@@ -2,11 +2,11 @@ from typing import List
 
 from numpy import ndarray
 import numpy as np
-from tml_decoder.encoders.abstract_encoder import AbstractEncoder
+import torch
 from torch import nn, optim
 from torch.optim.lr_scheduler import CosineAnnealingLR
-import torch
 
+from tml_decoder.encoders.abstract_encoder import AbstractEncoder
 from tml_decoder.utils.helper_functions import default_device
 
 
@@ -56,9 +56,7 @@ def soft_prompt(
         optimizer.zero_grad()
         output = encoder.raw_encode(input_ids, attention_mask)
 
-        loss = criterion(
-            output.squeeze(), target_tensor.squeeze(), torch.tensor(1.0).to(device)
-        )
+        loss = criterion(output.squeeze(), target_tensor.squeeze(), torch.tensor(1.0).to(device))
         loss.backward()
 
         char_tensor = encoder.get_characteristic_tensor_for_token_id(unused_token_id)
@@ -69,19 +67,12 @@ def soft_prompt(
 
         if loss.item() < best:
             best = loss.item()
-            best_emb = (
-                encoder.get_embedding_for_token_id(unused_token_id)
-                .detach()
-                .cpu()
-                .numpy()
-            )
+            best_emb = encoder.get_embedding_for_token_id(unused_token_id).detach().cpu().numpy()
 
     encoder.eval()
     cossims = []
     for token_id in range(len(encoder.get_tokenizer_vocab())):
-        token_embedding = (
-            encoder.get_embedding_for_token_id(token_id).detach().cpu().numpy()
-        )
+        token_embedding = encoder.get_embedding_for_token_id(token_id).detach().cpu().numpy()
         cossims.append(
             cs(
                 torch.Tensor(token_embedding).unsqueeze(0),

@@ -1,11 +1,11 @@
 from typing import List, Union
 
-import torch
-from tml_decoder.encoders.abstract_encoder import AbstractEncoder
-from sentence_transformers import SentenceTransformer, util
 from numpy import ndarray
 import numpy as np
+from sentence_transformers import SentenceTransformer, util
+import torch
 
+from tml_decoder.encoders.abstract_encoder import AbstractEncoder
 from tml_decoder.utils.helper_functions import default_device
 
 
@@ -27,9 +27,7 @@ class GtrBaseEncoder(AbstractEncoder):
         if isinstance(result, ndarray):
             return result
 
-        raise TypeError(
-            "Expected ndarray from self.encoder.encode, got {}".format(type(result))
-        )
+        raise TypeError("Expected ndarray from self.encoder.encode, got {}".format(type(result)))
 
     def encode_batch(self, texts: List[str]) -> List[ndarray]:
         return self.encoder.encode(texts, show_progress_bar=False)
@@ -38,26 +36,20 @@ class GtrBaseEncoder(AbstractEncoder):
         return self.encoder.tokenizer.encode(text)
 
     def get_unused_token(self) -> str:
-        return next(
-            k for k, v in self.encoder.tokenizer.vocab.items() if "<extra_id_" in k
-        )
+        return next(k for k, v in self.encoder.tokenizer.vocab.items() if "<extra_id_" in k)
 
     def get_token_id(self, token: str) -> int:
         return self.encoder.tokenizer.vocab[token]
 
     def get_characteristic_tensor_for_token_id(self, token_id: int):
-        return torch.tensor(
-            [i for i in range(len(self.encoder.tokenizer.vocab)) if i != token_id]
-        )
+        return torch.tensor([i for i in range(len(self.encoder.tokenizer.vocab)) if i != token_id])
 
     def freeze_weights(self) -> None:
         for param in self.encoder.parameters():
             param.requires_grad = False
 
     def unfreeze_embedding_weights(self) -> None:
-        self.encoder[0]._modules["auto_model"]._modules["encoder"]._modules[
-            "embed_tokens"
-        ]._parameters["weight"].requires_grad = True
+        self.encoder[0]._modules["auto_model"]._modules["encoder"]._modules["embed_tokens"]._parameters["weight"].requires_grad = True
 
     def get_eot_token_id(self) -> int:
         return 1
@@ -65,9 +57,7 @@ class GtrBaseEncoder(AbstractEncoder):
     def get_parameters(self):
         return self.encoder.parameters()
 
-    def raw_encode(
-        self, input_ids: torch.Tensor, attention_mask: torch.Tensor
-    ) -> torch.Tensor:
+    def raw_encode(self, input_ids: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
         return self.encoder(
             {
                 "input_ids": input_ids,
@@ -76,21 +66,13 @@ class GtrBaseEncoder(AbstractEncoder):
         )["sentence_embedding"]
 
     def zero_grad_for_embeddings(self, mask: torch.Tensor):
-        self.encoder[0]._modules["auto_model"]._modules["encoder"]._modules[
-            "embed_tokens"
-        ]._parameters["weight"].grad[mask] = 0
+        self.encoder[0]._modules["auto_model"]._modules["encoder"]._modules["embed_tokens"]._parameters["weight"].grad[mask] = 0
 
     def get_tokenizer_vocab(self):
         return self.encoder.tokenizer.vocab
 
     def get_embedding_for_token_id(self, token_id: int):
-        return (
-            self.encoder[0]
-            ._modules["auto_model"]
-            ._modules["encoder"]
-            ._modules["embed_tokens"]
-            ._parameters["weight"][token_id]
-        )
+        return self.encoder[0]._modules["auto_model"]._modules["encoder"]._modules["embed_tokens"]._parameters["weight"][token_id]
 
     def decode(self, token_ids: Union[int, List[int]]) -> str:
         if isinstance(token_ids, int):
