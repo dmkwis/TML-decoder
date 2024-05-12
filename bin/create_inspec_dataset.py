@@ -28,14 +28,14 @@ Output:
 """
 
 import json
+import os
 import random
 import re
-import fire
-import os
-import pandas as pd
-
 from typing import Dict, List
+
+import fire
 from openai import OpenAI
+import pandas as pd
 from tqdm import tqdm
 
 
@@ -53,7 +53,7 @@ def _generate_summary(client: OpenAI, docs: List[str], keyword: str) -> str:
         messages=[
             {
                 "role": "system",
-                "content": f"""
+                "content": """
                 You have a collection of scientific articles, each separated by a new line.
                 Generate a concise summary that encompasses the key insights from all the articles collectively.
                 Your summary should capture the overarching themes, main findings, and notable points discussed across the articles.
@@ -102,15 +102,7 @@ def _read_docs(base_path: str) -> List[str]:
 
 
 def _clean_keyword(keyword: str) -> str:
-    keyword = (
-        keyword.replace("\t", " ")
-        .replace("\n", " ")
-        .replace("\r", " ")
-        .replace("\f", " ")
-        .replace("\v", " ")
-        .strip()
-        .lower()
-    )
+    keyword = keyword.replace("\t", " ").replace("\n", " ").replace("\r", " ").replace("\f", " ").replace("\v", " ").strip().lower()
     keyword = re.sub(r"\s+", " ", keyword)
     return keyword
 
@@ -140,7 +132,7 @@ def _read_keywords(base_path: str) -> List[List[str]]:
     return keywords
 
 
-from typing import List, Dict
+from typing import List
 
 
 def _get_keyword_occurences(keywords: List[List[str]]) -> Dict[str, List[int]]:
@@ -189,13 +181,14 @@ def main(base_path: str = ".dump/Inspec", sample_size: int = 3, seed: int = 42):
         keyword_docs_sub[keyword] = sample
 
     existing_keywords = list(keywords_descriptions.keys())
-    filtered_keywords = [
-        [keyword for keyword in keywords_list if keyword in existing_keywords]
-        for keywords_list in keywords
-    ]
+    filtered_keywords = [[keyword for keyword in keywords_list if keyword in existing_keywords] for keywords_list in keywords]
 
     summaries_df = pd.DataFrame(
-        {"keyword": list(keywords_descriptions.keys()), "description": list(keywords_descriptions.values()), "subs": list(keyword_docs_sub.values())}
+        {
+            "keyword": list(keywords_descriptions.keys()),
+            "description": list(keywords_descriptions.values()),
+            "subs": list(keyword_docs_sub.values()),
+        }
     )
     summaries_df.to_csv("dataset/inspec/summaries.csv", index=False)
 
@@ -203,10 +196,7 @@ def main(base_path: str = ".dump/Inspec", sample_size: int = 3, seed: int = 42):
         {
             "doc": docs,
             "keywords": filtered_keywords,
-            "summary": [
-                [keywords_descriptions[keyword] for keyword in keywords_list]
-                for keywords_list in filtered_keywords
-            ],
+            "summary": [[keywords_descriptions[keyword] for keyword in keywords_list] for keywords_list in filtered_keywords],
         }
     )
     dataset_df = dataset_df[dataset_df["summary"].apply(lambda x: len(x) > 0)]

@@ -1,21 +1,19 @@
-from typing import Any
 import random
+from typing import Any
+
 from tml_decoder.encoders.abstract_encoder import AbstractEncoder
 from tml_decoder.encoders.gtr_base_encoder import GtrBaseEncoder
+from tml_decoder.encoders.mini_lm_encoder import MiniLMEncoder
 from tml_decoder.generators.abstract_generator import AbstractGenerator
+from tml_decoder.generators.gpt2_generator import GPT2Generator
 from tml_decoder.models.abstract_model import AbstractLabelModel
 from tml_decoder.models.beam_search_model import BeamSearchModel
 from tml_decoder.models.dumb_model import DumbModel
-
-from tml_decoder.generators.gpt2_generator import GPT2Generator
 from tml_decoder.models.guides.abstract_guide import AbstractGuide
 from tml_decoder.models.guides.random_guide import RandomGuide
 from tml_decoder.models.guides.soft_prompt_guide import SoftPromptGuide
 from tml_decoder.models.mcts_model import MCTSModel
-from tml_decoder.encoders.mini_lm_encoder import MiniLMEncoder
 from tml_decoder.models.vec2text_model import Vec2TextModel
-
-import torch
 
 ### If you're gonna use any embedder / generator make sure that they're initialized in this file
 ### This is in order not to get confused and use different model for different experiments
@@ -25,6 +23,7 @@ import torch
 random.seed(42)  # for reproducibility
 
 # OUR LLM + EMBEDDING SETUP
+
 
 def get_generator(name: str, *args: Any, **kwargs: Any) -> AbstractGenerator:
     """
@@ -73,7 +72,7 @@ def get_encoder(name: str, *args: Any, **kwargs: Any) -> AbstractEncoder:
 def get_guide(name: str, encoder: AbstractEncoder, *args: Any, **kwargs: Any) -> AbstractGuide:
     """
     Returns a guide which helps in choosing the most promising node to expand
-    
+
     Args:
         name: The name of the guide.
         *args: Variable length argument list.
@@ -89,8 +88,9 @@ def get_guide(name: str, encoder: AbstractEncoder, *args: Any, **kwargs: Any) ->
         return RandomGuide(*args, **kwargs)
     if name == "soft-prompt":
         return SoftPromptGuide(encoder)
-    
+
     raise NotImplementedError(f"Guide {name} not implemented")
+
 
 def get_model(name: str, encoder: AbstractEncoder, *args: Any, **kwargs: Any) -> AbstractLabelModel:
     """

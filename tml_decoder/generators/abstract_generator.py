@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod, abstractproperty
 
+
 class AbstractGenerator(ABC):
     @abstractmethod
     def generate(self, text: str):
@@ -8,7 +9,7 @@ class AbstractGenerator(ABC):
     @abstractmethod
     def get_tokenizer(self):
         raise NotImplementedError
-    
+
     @abstractmethod
     def calculate_perplexity(self):
         raise NotImplementedError

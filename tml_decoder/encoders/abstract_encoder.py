@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Union
+
 from numpy import ndarray
 import numpy as np
 import torch
@@ -59,9 +60,7 @@ class AbstractEncoder(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def raw_encode(
-        self, input_ids: torch.Tensor, attention_mask: torch.Tensor
-    ) -> torch.Tensor:
+    def raw_encode(self, input_ids: torch.Tensor, attention_mask: torch.Tensor) -> torch.Tensor:
         raise NotImplementedError
 
     @abstractmethod

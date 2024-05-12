@@ -1,4 +1,5 @@
 from typing import List
+
 from tml_decoder.models.abstract_model import AbstractLabelModel
 
 

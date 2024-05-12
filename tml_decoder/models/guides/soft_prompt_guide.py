@@ -1,13 +1,12 @@
 from typing import List
 
 from numpy import ndarray
-from tml_decoder.encoders.abstract_encoder import AbstractEncoder
-from tml_decoder.generators.abstract_generator import AbstractGenerator
-from tml_decoder.models.guides.abstract_guide import AbstractGuide
+import torch
 from torch import nn, optim
 from torch.optim.lr_scheduler import CosineAnnealingLR
-import torch
 
+from tml_decoder.encoders.abstract_encoder import AbstractEncoder
+from tml_decoder.models.guides.abstract_guide import AbstractGuide
 from tml_decoder.utils.helper_functions import default_device
 
 
@@ -18,9 +17,7 @@ class SoftPromptGuide(AbstractGuide):
         self.encoder.freeze_weights()
         self.encoder.unfreeze_embedding_weights()
         self.criterion = nn.CosineEmbeddingLoss()
-        self.unused_token_id = self.encoder.get_token_id(
-            self.encoder.get_unused_token()
-        )
+        self.unused_token_id = self.encoder.get_token_id(self.encoder.get_unused_token())
         self.cs = nn.CosineSimilarity()
         self.device = device
 
@@ -33,9 +30,7 @@ class SoftPromptGuide(AbstractGuide):
         attention_mask = torch.ones_like(input_ids).to(self.device)
         optimizer = optim.Adam(self.encoder.get_parameters(), lr=1)
         scheduler = CosineAnnealingLR(optimizer, T_max=100, eta_min=0.0001)
-        char_tensor = self.encoder.get_characteristic_tensor_for_token_id(
-            self.unused_token_id
-        )
+        char_tensor = self.encoder.get_characteristic_tensor_for_token_id(self.unused_token_id)
 
         self.encoder.train()
         best = float("inf")
@@ -60,20 +55,13 @@ class SoftPromptGuide(AbstractGuide):
 
             if loss.item() < best:
                 best = loss.item()
-                best_emb = (
-                    self.encoder.get_embedding_for_token_id(self.unused_token_id)
-                    .detach()
-                    .cpu()
-                    .numpy()
-                )
+                best_emb = self.encoder.get_embedding_for_token_id(self.unused_token_id).detach().cpu().numpy()
 
         # now discretization
         self.encoder.eval()
         cossims = []
         for token_id in range(len(self.encoder.get_tokenizer_vocab())):
-            token_embedding = (
-                self.encoder.get_embedding_for_token_id(token_id).detach().cpu().numpy()
-            )
+            token_embedding = self.encoder.get_embedding_for_token_id(token_id).detach().cpu().numpy()
             cossims.append(
                 self.cs(
                     torch.Tensor(token_embedding).unsqueeze(0),
@@ -88,9 +76,7 @@ class SoftPromptGuide(AbstractGuide):
         return self.cache_score[text]
 
     def choose_next(self, propositions: List[str], target_embedding: ndarray) -> str:
-        return max(
-            propositions, key=lambda text: self._get_score(text, target_embedding)
-        )
+        return max(propositions, key=lambda text: self._get_score(text, target_embedding))
 
     def reset(self):
         self.cache_score = {}

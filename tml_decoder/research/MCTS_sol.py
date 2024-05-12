@@ -1,6 +1,8 @@
-import math
 from argparse import ArgumentParser
+import math
+
 from tqdm import tqdm
+
 import tml_decoder.utils.common_utils as common_utils
 
 generator = None
@@ -20,7 +22,8 @@ best_state = None
 best_score = -1.5  # score -1.5 as cos similiarity is in range [-1, 1]
 
 
-"""
+class Node:
+    """
     Node class in MCTS search tree.
         state - string that the node represents
         parent - pointer to parent node
@@ -28,10 +31,8 @@ best_score = -1.5  # score -1.5 as cos similiarity is in range [-1, 1]
         visits - number of visits to this node
         eval - value in this node
     Attributes visits and eval are essential to MCTS.
-"""
+    """
 
-
-class Node:
     def __init__(self, state, parent=None):
         self.state = state
         self.parent = parent
@@ -41,44 +42,36 @@ class Node:
         self.score = float(eval(state))  # Cos similarity for this sentence
 
 
-"""
-    We're selecting a child which scores max on Upper Confidence Bound (UCT) score
-"""
-
-
 def select(node):
-    l = list(node.children.values())
-    l.append(node)
-    return max(l, key=uct_score)
-
-
-"""
-    Calculating UCT score.
-    If node is not visited - assign infinity to it, else calculate the score with formula
-    node_value / node_visits + sqrt(2 * ln(parent_visits) / node_visits)
-"""
+    """
+    We're selecting a child which scores max on Upper Confidence Bound (UCT) score
+    """
+    list_of_scores = list(node.children.values())
+    list_of_scores.append(node)
+    return max(list_of_scores, key=uct_score)
 
 
 def uct_score(node):
+    """
+    Calculating UCT score.
+    If node is not visited - assign infinity to it, else calculate the score with formula
+    node_value / node_visits + sqrt(2 * ln(parent_visits) / node_visits)
+    """
     if node.visits == 0:
         return float("inf")
     parent_visits = node.parent.visits if node.parent is not None else 1
-    return (node.value / node.visits) + math.sqrt(
-        2 * math.log(parent_visits) / node.visits
-    )
-
-
-"""
-    Getting random child for our node. 
-    We're generating only few most possible sentence continuations, for two reasons:
-    1. Reducing search space.
-    2. Considering only most humanlike sentence continuations.
-"""
+    return (node.value / node.visits) + math.sqrt(2 * math.log(parent_visits) / node.visits)
 
 
 def get_random_child(node):
+    """
+    Getting random child for our node.
+    We're generating only few most possible sentence continuations, for two reasons:
+    1. Reducing search space.
+    2. Considering only most humanlike sentence continuations.
+    """
     results = generator.generate(node.state)
-    child_state = common_utils.random.choice(results) # TODO: should this be weighted by LLM perplexity?
+    child_state = common_utils.random.choice(results)  # TODO: should this be weighted by LLM perplexity?
     child = Node(child_state, parent=node)
     if child_state not in node.children:
         node.children[child_state] = child
@@ -142,9 +135,7 @@ if __name__ == "__main__":
         prog="MCTS solution",
         description="Finding human-understandable word minimizing cosine similarity with given embedding with the use of LLM and MCTS search.",
     )
-    parser.add_argument(
-        "--iter-num", type=int, help="Hyperparameter to MCTS search.", default=1000
-    )
+    parser.add_argument("--iter-num", type=int, help="Hyperparameter to MCTS search.", default=1000)
     parser.add_argument(
         "--max-len",
         type=int,
@@ -163,9 +154,7 @@ if __name__ == "__main__":
         help="How many sentence continuations should LLM propose",
         default=10,
     )
-    parser.add_argument(
-        "--target-phrase", type=str, help="Target phrase to decode.", required=True
-    )
+    parser.add_argument("--target-phrase", type=str, help="Target phrase to decode.", required=True)
     args = parser.parse_args()
 
     # INITIAL SETUP
@@ -174,17 +163,11 @@ if __name__ == "__main__":
     num_gens = args.num_gens
 
     ## INIT MODELS
-    generator = common_utils.get_generator(
-        "gpt2", step_size=step_size, num_gens=num_gens
-    )
+    generator = common_utils.get_generator("gpt2", step_size=step_size, num_gens=num_gens)
     encoder = common_utils.get_encoder("MiniLM")
 
-    target_phrase = (
-        args.target_phrase
-    )  # phrase that we want to obtain (unknown to the algorithm)
-    target_embedding = encoder.encode(
-        target_phrase
-    )  # embedding of target_phrase (known to the algorithm)
+    target_phrase = args.target_phrase  # phrase that we want to obtain (unknown to the algorithm)
+    target_embedding = encoder.encode(target_phrase)  # embedding of target_phrase (known to the algorithm)
 
     # START SEARCH
     root_node = mcts("", iterations=args.iter_num)

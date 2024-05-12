@@ -10,4 +10,5 @@ loguru==0.7.2
 neptune==1.9.1
 pytest==8.1.1
 rouge-score==0.1.2
+pre-commit==3.7.1
 -e .
