@@ -11,7 +11,7 @@ class AbstractGenerator(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def calculate_perplexity(self):
+    def calculate_perplexity(self, text: str):
         raise NotImplementedError
 
     @abstractproperty

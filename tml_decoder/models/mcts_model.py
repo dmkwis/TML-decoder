@@ -9,7 +9,6 @@ from tml_decoder.encoders.abstract_encoder import AbstractEncoder
 from tml_decoder.generators.abstract_generator import AbstractGenerator
 from tml_decoder.models.abstract_model import AbstractLabelModel
 from tml_decoder.models.guides.abstract_guide import AbstractGuide
-from tml_decoder.utils.soft_prompt import soft_prompt
 
 
 class Node:
@@ -21,11 +20,12 @@ class Node:
         target_embedding,
         parent=None,
         perplexity_weight: float = 1e-4,
+        soft_prompt: bool = False,
     ):
         self.state = state
         self.parent = parent
         self.all_states = generator.generate(self.state)
-        soft_prompt_tokens = soft_prompt(encoder, state, target_embedding)
+        soft_prompt_tokens = soft_prompt(encoder, state, target_embedding) if soft_prompt else []
         self.all_states += [state + " " + token if len(state) != 0 else token for token in soft_prompt_tokens]
 
         self.children = {}
@@ -64,6 +64,7 @@ class MCTSModel(AbstractLabelModel):
         max_len: int = 15,
         min_result_len: int = 3,
         initial_prompt: str = "",
+        soft_prompt: bool = False,
     ) -> None:
         super().__init__()
         self.encoder = encoder
@@ -74,6 +75,7 @@ class MCTSModel(AbstractLabelModel):
         self.min_result_len = min_result_len
         self.target_embedding = None
         self.initial_prompt = initial_prompt
+        self.soft_prompt = soft_prompt
 
     @property
     def name(self):
@@ -89,7 +91,7 @@ class MCTSModel(AbstractLabelModel):
     def expand(self, node):
         unexplored_actions = node.get_unexplored_states()
         new_state = self.guide.choose_next(unexplored_actions, self.target_embedding)
-        child = Node(new_state, self.encoder, self.generator, self.target_embedding, parent=node)
+        child = Node(new_state, self.encoder, self.generator, self.target_embedding, parent=node, soft_prompt=self.soft_prompt)
         node.children[new_state] = child
         return child
 
@@ -105,7 +107,7 @@ class MCTSModel(AbstractLabelModel):
         # Perform a random simulation from the current state and return the result
         while not self.is_terminal_node(node):
             new_state = random.choice(node.get_all_states())
-            new_node = Node(new_state, self.encoder, self.generator, self.target_embedding, node)
+            new_node = Node(new_state, self.encoder, self.generator, self.target_embedding, node, soft_prompt=self.soft_prompt)
             node.children[new_state] = new_node
             node = new_node
         return node.get_score()
@@ -119,7 +121,7 @@ class MCTSModel(AbstractLabelModel):
     def mcts(self, initial_state, iterations, target_embedding):
         self.guide.reset()
         self.target_embedding = target_embedding
-        root_node = Node(initial_state, self.encoder, self.generator, self.target_embedding)
+        root_node = Node(initial_state, self.encoder, self.generator, self.target_embedding, soft_prompt=self.soft_prompt)
 
         for _ in tqdm(range(iterations), "MCTS progress"):
             node = self.select_node(root_node)
