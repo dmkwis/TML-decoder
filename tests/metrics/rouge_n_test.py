@@ -1,6 +1,6 @@
 import pytest
 
-from tml_decoder.metrics.rouge_n import evaluate_rouge_n  # Adjust the import according to your actual file structure
+from tml_decoder.metrics_old.rouge_n import evaluate_rouge_n  # Adjust the import according to your actual file structure
 
 
 class TestROUGEN:

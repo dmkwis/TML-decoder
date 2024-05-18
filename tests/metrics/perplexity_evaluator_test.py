@@ -1,6 +1,6 @@
 import pytest
 
-from tml_decoder.metrics.perplexity_evaluator import GPT2PerplexityEvaluator
+from tml_decoder.metrics_old.perplexity_evaluator import GPT2PerplexityEvaluator
 
 
 class TestPerplexityEvaluator:
