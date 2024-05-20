@@ -3,8 +3,6 @@ import logging
 import os
 from typing import Any, Tuple, TypedDict
 
-from dotenv import load_dotenv
-import fire
 import neptune
 import pandas as pd
 from sklearn.model_selection import train_test_split
@@ -14,19 +12,8 @@ from tml_decoder.encoders.abstract_encoder import AbstractEncoder
 from tml_decoder.generators.abstract_generator import AbstractGenerator
 from tml_decoder.metrics import Metrics
 from tml_decoder.models.abstract_model import AbstractLabelModel
-import tml_decoder.utils.common_utils as common_utils
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-
-
-load_dotenv()
-
-assert os.getenv("NEPTUNE_PROJECT") and os.getenv("NEPTUNE_API_TOKEN")
-
-run = neptune.init_run(
-    project=os.getenv("NEPTUNE_PROJECT"),
-    api_token=os.getenv("NEPTUNE_API_TOKEN"),
-)
 
 
 class ParsedDataset(TypedDict):
@@ -35,7 +22,15 @@ class ParsedDataset(TypedDict):
     eval: Tuple[pd.DataFrame, pd.DataFrame]
 
 
-def eval_model(model: AbstractLabelModel, encoder: AbstractEncoder, generator: AbstractGenerator, parsed_dataset: ParsedDataset) -> Tuple[dict, dict]:
+def initialize_neptune_run():
+    """Initialize Neptune run with environment variables."""
+    return neptune.init_run(
+        project=os.getenv("NEPTUNE_PROJECT"),
+        api_token=os.getenv("NEPTUNE_API_TOKEN"),
+    )
+
+
+def eval_model(model: AbstractLabelModel, encoder: AbstractEncoder, generator: AbstractGenerator, parsed_dataset: ParsedDataset, run: Any) -> Tuple[dict, dict]:
     result = {"train": {}, "test": {}, "eval": {}}
     predictions = {"train": {}, "test": {}, "eval": {}}
 
@@ -53,7 +48,6 @@ def eval_model(model: AbstractLabelModel, encoder: AbstractEncoder, generator: A
 
         texts_for_summaries = defaultdict(list)
 
-        # Iterate over the dataset and populate the defaultdict
         for text, summaries in zip(X, y):
             for summary in summaries:
                 texts_for_summaries[summary].append(text)
@@ -111,30 +105,3 @@ def read_dataset(path: str, random_state: int = 42) -> ParsedDataset:
     }
 
     return parsed_dataset
-
-
-def main(model_name: str, dataset_path: str, encoder_name: str, *args: Any, **kwargs: Any) -> None:
-    run["dataset_path"] = dataset_path
-    run["parameters"] = {
-        "model_name": model_name,
-        "encoder_name": encoder_name,
-        "args": args,
-        "kwargs": kwargs,
-    }
-
-    encoder = common_utils.get_encoder(encoder_name)
-    generator = common_utils.get_generator("gpt2")
-    model = common_utils.get_model(model_name, encoder, *args, **kwargs)
-    dataset = read_dataset(dataset_path)
-
-    results, predictions = eval_model(model, encoder, generator, dataset)
-
-    print(f"Metrics for {model.name}: ", results)
-
-    run["results"] = results
-    run["predictions"] = predictions
-    run.stop()
-
-
-if __name__ == "__main__":
-    fire.Fire(main)
