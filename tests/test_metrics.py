@@ -33,8 +33,15 @@ class TestMetrics:
         assert all(isinstance(x, float) for x in result["cos_sim_for_avg_emb"])
 
     def test_calculate_perplexity(self, metrics):
-        # Implement the test for calculate_perplexity when the function is defined
-        pass
+        reference_texts = ["This is a test.", "Another test sentence."]
+        generated_texts = ["This is a generated sentence.", "Another generated text."]
+
+        result = metrics.calculate_perplexity(reference_texts, generated_texts)
+
+        assert "reference_perplexity" in result
+        assert "generated_perplexity" in result
+        assert all(isinstance(x, float) for x in result["reference_perplexity"])
+        assert all(isinstance(x, float) for x in result["generated_perplexity"])
 
     @pytest.mark.parametrize(
         "references, candidates, n, expected",

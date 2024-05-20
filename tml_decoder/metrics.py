@@ -38,9 +38,25 @@ class Metrics:
             "cos_sim_for_avg_emb": cos_sim_for_avg_emb,
         }
 
-    def calculate_perplexity(self, reference_texts, generated_texts, batch_size=8):
-        # Placeholder for perplexity calculation
-        pass
+    def calculate_perplexity(self, reference_texts: List[str], generated_texts: List[str], batch_size: int = 8) -> Dict[str, List[float]]:
+        reference_perplexities = []
+        generated_perplexities = []
+
+        num_samples = len(reference_texts)
+        for i in range(0, num_samples, batch_size):
+            batch_reference_texts = reference_texts[i : i + batch_size]
+            batch_generated_texts = generated_texts[i : i + batch_size]
+
+            batch_reference_perplexities = [self.generator.calculate_perplexity(text) for text in batch_reference_texts]
+            batch_generated_perplexities = [self.generator.calculate_perplexity(text) for text in batch_generated_texts]
+
+            reference_perplexities.extend(batch_reference_perplexities)
+            generated_perplexities.extend(batch_generated_perplexities)
+
+        return {
+            "reference_perplexity": reference_perplexities,
+            "generated_perplexity": generated_perplexities,
+        }
 
     def evaluate_rouge_n(self, reference_summaries: List[str], generated_summaries: List[str], n: int = 1) -> Dict[str, float]:
         """
