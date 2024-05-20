@@ -1,5 +1,7 @@
 from typing import Dict, List
 
+from rouge_score import rouge_scorer
+
 from tml_decoder.encoders.abstract_encoder import AbstractEncoder
 from tml_decoder.generators.abstract_generator import AbstractGenerator
 
@@ -40,9 +42,28 @@ class Metrics:
         # Placeholder for perplexity calculation
         pass
 
-    def calculate_rouge_n(self, reference_summaries, generated_summaries, n=1):
-        # Placeholder for ROUGE-N calculation
-        pass
+    def evaluate_rouge_n(self, reference_summaries: List[str], generated_summaries: List[str], n: int = 1) -> Dict[str, float]:
+        """
+        Evaluate ROUGE-N score for a set of generated summaries against reference summaries.
+
+        Parameters:
+        - reference_summaries: A list of reference summaries.
+        - generated_summaries: A list of generated summaries.
+        - n: The n-gram length for ROUGE-N calculation.
+
+        Returns:
+        - A dictionary containing the average ROUGE-N precision, recall, and F1 score.
+        """
+        scorer = rouge_scorer.RougeScorer([f"rouge{n}"], use_stemmer=True)
+        scores = []
+        for reference, generated in zip(reference_summaries, generated_summaries):
+            score = scorer.score(reference, generated)
+            scores.append(score[f"rouge{n}"])
+        # Calculate average scores
+        avg_precision = sum(score.precision for score in scores) / len(scores)
+        avg_recall = sum(score.recall for score in scores) / len(scores)
+        avg_f1 = sum(score.fmeasure for score in scores) / len(scores)
+        return {"precision": avg_precision, "recall": avg_recall, "f1": avg_f1}
 
     def calculate_metrics(self, true_labels, generated_labels, texts, reference_texts, generated_texts, reference_summaries, generated_summaries):
         # Placeholder for overall metrics calculation
