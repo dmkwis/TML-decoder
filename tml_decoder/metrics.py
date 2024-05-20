@@ -1,6 +1,7 @@
 from typing import Dict, List
 
 from rouge_score import rouge_scorer
+from tqdm import tqdm
 
 from tml_decoder.encoders.abstract_encoder import AbstractEncoder
 from tml_decoder.generators.abstract_generator import AbstractGenerator
@@ -17,7 +18,7 @@ class Metrics:
         cos_sim_for_avg_emb = []
 
         num_samples = len(true_labels)
-        for i in range(0, num_samples, self.batch_size):
+        for i in tqdm(range(0, num_samples, self.batch_size), desc="Calculating cosine similarity"):
             batch_true_labels = true_labels[i : i + self.batch_size]
             batch_generated_labels = generated_labels[i : i + self.batch_size]
             batch_text_groups = texts[i : i + self.batch_size]
@@ -43,7 +44,7 @@ class Metrics:
         generated_perplexities = []
 
         num_samples = len(reference_texts)
-        for i in range(0, num_samples, batch_size):
+        for i in tqdm(range(0, num_samples, batch_size), desc="Calculating perplexity"):
             batch_reference_texts = reference_texts[i : i + batch_size]
             batch_generated_texts = generated_texts[i : i + batch_size]
 

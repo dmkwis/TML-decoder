@@ -11,6 +11,8 @@ from sklearn.model_selection import train_test_split
 from tqdm import tqdm
 
 from tml_decoder.encoders.abstract_encoder import AbstractEncoder
+from tml_decoder.generators.abstract_generator import AbstractGenerator
+from tml_decoder.metrics import Metrics
 from tml_decoder.models.abstract_model import AbstractLabelModel
 import tml_decoder.utils.common_utils as common_utils
 
@@ -33,16 +35,21 @@ class ParsedDataset(TypedDict):
     eval: Tuple[pd.DataFrame, pd.DataFrame]
 
 
-def eval_model(model: AbstractLabelModel, encoder: AbstractEncoder, parsed_dataset: ParsedDataset) -> Tuple[dict, dict]:
+def eval_model(model: AbstractLabelModel, encoder: AbstractEncoder, generator: AbstractGenerator, parsed_dataset: ParsedDataset) -> Tuple[dict, dict]:
     result = {"train": {}, "test": {}, "eval": {}}
     predictions = {"train": {}, "test": {}, "eval": {}}
 
     for split_name, split in parsed_dataset.items():
-        count_cos_sim_for_ground_truth = []
-        count_cos_sim_for_avg_emb = []
-
         X = split[0]
         y = split[1]
+
+        true_labels = []
+        generated_labels = []
+        texts = []
+        reference_texts = []
+        generated_texts = []
+        reference_summaries = []
+        generated_summaries = []
 
         texts_for_summaries = defaultdict(list)
 
@@ -51,43 +58,39 @@ def eval_model(model: AbstractLabelModel, encoder: AbstractEncoder, parsed_datas
             for summary in summaries:
                 texts_for_summaries[summary].append(text)
 
-        for summary, texts in tqdm(texts_for_summaries.items(), f"{split_name} split progress"):
-            generated_label = model.get_label(texts)
-            avg_embedding = encoder.average_embedding_for_texts(texts)
+        for summary, texts_group in tqdm(texts_for_summaries.items(), f"{split_name} split progress"):
+            generated_label = model.get_label(texts_group)
 
-            true_label_embedding = encoder.encode(summary)
-            generated_label_embedding = encoder.encode(generated_label)
-            cos_sim_for_ground_truth = encoder.similarity(true_label_embedding, generated_label_embedding)
-            cos_sim_for_avg_emb = encoder.similarity(avg_embedding, generated_label_embedding)
-            count_cos_sim_for_ground_truth.append(cos_sim_for_ground_truth)
-            count_cos_sim_for_avg_emb.append(cos_sim_for_avg_emb)
+            true_labels.append(summary)
+            generated_labels.append(generated_label)
+            texts.append(texts_group)
+            reference_texts.append(" ".join(texts_group))
+            generated_texts.append(generated_label)
+            reference_summaries.append(summary)
+            generated_summaries.append(generated_label)
 
             logging.info(
                 {
                     "category": summary,
                     "generated_label": generated_label,
-                    "cos_sim_for_ground_truth": cos_sim_for_ground_truth,
-                    "cos_sim_for_avg_emb": cos_sim_for_avg_emb,
                 }
             )
 
             predictions[split_name][summary] = {
                 "generated_label": generated_label,
-                "cos_sim_for_ground_truth": cos_sim_for_ground_truth,
-                "cos_sim_for_avg_emb": cos_sim_for_avg_emb,
+                "texts": texts_group,
+                "category": summary,
             }
 
-        assert len(count_cos_sim_for_ground_truth) > 0, f"Length of {split_name} is 0"
-        average_cos_sim_for_gt = sum(count_cos_sim_for_ground_truth) / len(count_cos_sim_for_ground_truth)
-        average_cos_sim_for_avg_emb = sum(count_cos_sim_for_avg_emb) / len(count_cos_sim_for_avg_emb)
-        result[split_name]["avg_cos_sim_for_ground_truth"] = average_cos_sim_for_gt
-        result[split_name]["avg_cos_sim_for_avg_emb"] = average_cos_sim_for_avg_emb
+        metrics = Metrics(encoder, generator, batch_size=64)
+        metrics_result = metrics.calculate_metrics(true_labels, generated_labels, texts, reference_texts, generated_texts, reference_summaries, generated_summaries)
+        result[split_name] = metrics_result
 
         if run is None:
             continue
 
-        run[f"{split_name}/avg_cos_sim_for_ground_truth"] = average_cos_sim_for_gt
-        run[f"{split_name}/avg_cos_sim_for_avg_emb"] = average_cos_sim_for_avg_emb
+        for metric_name, metric_value in metrics_result.items():
+            run[f"{split_name}/{metric_name}"] = metric_value
 
     return result, predictions
 
@@ -120,10 +123,11 @@ def main(model_name: str, dataset_path: str, encoder_name: str, *args: Any, **kw
     }
 
     encoder = common_utils.get_encoder(encoder_name)
+    generator = common_utils.get_generator("gpt2")
     model = common_utils.get_model(model_name, encoder, *args, **kwargs)
     dataset = read_dataset(dataset_path)
 
-    results, predictions = eval_model(model, encoder, dataset)
+    results, predictions = eval_model(model, encoder, generator, dataset)
 
     print(f"Metrics for {model.name}: ", results)
 
