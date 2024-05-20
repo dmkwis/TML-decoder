@@ -82,5 +82,11 @@ class Metrics:
         return {"precision": avg_precision, "recall": avg_recall, "f1": avg_f1}
 
     def calculate_metrics(self, true_labels, generated_labels, texts, reference_texts, generated_texts, reference_summaries, generated_summaries):
-        # Placeholder for overall metrics calculation
-        pass
+        cosine_similarity = self.calculate_cosine_similarity(true_labels, generated_labels, texts)
+        perplexity = self.calculate_perplexity(reference_texts, generated_texts)
+        rouge_n = self.evaluate_rouge_n(reference_summaries, generated_summaries)
+        return {
+            "cosine_similarity": cosine_similarity,
+            "perplexity": perplexity,
+            "rouge_n": rouge_n,
+        }

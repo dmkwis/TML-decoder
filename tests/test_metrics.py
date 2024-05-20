@@ -79,5 +79,17 @@ class TestMetrics:
         assert result["f1"] == expected["f1"], f"Expected f1 {expected['f1']}, got {result['f1']}"
 
     def test_calculate_metrics(self, metrics):
-        # Implement the test for calculate_metrics when the function is defined
-        pass
+        true_labels = ["true1", "true2"]
+        generated_labels = ["gen1", "gen2"]
+        texts = [["text1a", "text1b"], ["text2a", "text2b"]]
+        reference_texts = ["This is a test.", "Another test sentence."]
+        generated_texts = ["This is a generated sentence.", "Another generated text."]
+        reference_summaries = ["The quick brown fox jumps over the lazy dog"]
+        generated_summaries = ["The quick brown fox jumps over the lazy dog"]
+
+        result = metrics.calculate_metrics(true_labels, generated_labels, texts, reference_texts, generated_texts, reference_summaries, generated_summaries)
+
+        assert "cosine_similarity" in result
+        assert "perplexity" in result
+        assert "rouge_n" in result
+        assert all(isinstance(v, dict) for v in result.values())
