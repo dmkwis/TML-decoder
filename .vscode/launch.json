@@ -1,0 +1,39 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "MCTS MiniLM Inspec",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/eval.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--model_name='MCTS'",
+                "--encoder_name='MiniLM'",
+                "--dataset_path='dataset/inspec/dataset.jsonl'",
+                "--initial_prompt='These documents describe'",
+                "--max_len=200",
+                "--min_result_len=20",
+            ],
+            "justMyCode": true
+        },
+        {
+            "name": "Dumb model",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/eval.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--model_name='dumb'",
+                "--encoder_name='MiniLM'",
+                "--dataset_path='dataset/inspec/dataset.jsonl'",
+                "--metrics_to_skip='cosine_similarity'",
+                "--batch_size=16"
+            ],
+            "justMyCode": true
+        }
+    ]
+}
