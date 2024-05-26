@@ -31,7 +31,7 @@ class Node:
         self.children = {}
         self.visits = 0
         self.value = 0  # Value for MCTS search
-        self.score = encoder.similarity(encoder.encode(self.state), target_embedding) + perplexity_weight * generator.calculate_perplexity(self.state)
+        self.score = encoder.similarity(encoder.encode(self.state), target_embedding) + perplexity_weight * generator.calculate_perplexity([self.state])[0]
 
     def get_unexplored_states(self):
         return list(set(self.all_states).difference(self.children.keys()))
