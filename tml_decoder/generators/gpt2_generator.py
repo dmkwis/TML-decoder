@@ -13,6 +13,7 @@ class GPT2Generator(AbstractGenerator):
         self.num_gens = num_gens
         self.device = device
         self.gpt_tokenizer = AutoTokenizer.from_pretrained("openai-community/gpt2")
+        self.gpt_tokenizer.pad_token = self.gpt_tokenizer.eos_token  # Set pad_token to eos_token
         self.generator = GPT2LMHeadModel.from_pretrained("openai-community/gpt2").to(self.device)
         self.generator.eval()
 
@@ -52,8 +53,8 @@ class GPT2Generator(AbstractGenerator):
             with torch.no_grad():
                 outputs = self.generator(**batch_tokenized, labels=batch_tokenized["input_ids"])
                 batch_loss = outputs.loss
-                perplexities = torch.exp(batch_loss)
-                all_perplexities.extend(perplexities.cpu().tolist())
+                perplexity = torch.exp(batch_loss).item()
+                all_perplexities.extend([perplexity] * len(batch_texts))
 
         return all_perplexities
 

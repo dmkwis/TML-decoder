@@ -31,7 +31,13 @@ def initialize_neptune_run():
 
 
 def eval_model(
-    model: AbstractLabelModel, encoder: AbstractEncoder, generator: AbstractGenerator, parsed_dataset: ParsedDataset, run: Any, metrics_to_skip: Optional[List[str]] = None
+    model: AbstractLabelModel,
+    encoder: AbstractEncoder,
+    generator: AbstractGenerator,
+    parsed_dataset: ParsedDataset,
+    run: Any,
+    metrics_to_skip: Optional[List[str]] = None,
+    batch_size: int = 16,
 ) -> Tuple[dict, dict]:
     result = {"train": {}, "test": {}, "eval": {}}
     predictions = {"train": {}, "test": {}, "eval": {}}
@@ -78,7 +84,7 @@ def eval_model(
                 "category": summary,
             }
 
-        metrics = Metrics(encoder, generator, batch_size=64, metrics_to_skip=metrics_to_skip)
+        metrics = Metrics(encoder, generator, batch_size=batch_size, metrics_to_skip=metrics_to_skip)
         metrics_result = metrics.calculate_metrics(true_labels, generated_labels, texts, reference_texts, generated_texts, reference_summaries, generated_summaries)
         result[split_name] = metrics_result
 
