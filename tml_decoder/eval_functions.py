@@ -1,7 +1,7 @@
 from collections import defaultdict
 import logging
 import os
-from typing import Any, Tuple, TypedDict
+from typing import Any, List, Optional, Tuple, TypedDict
 
 import neptune
 import pandas as pd
@@ -30,7 +30,9 @@ def initialize_neptune_run():
     )
 
 
-def eval_model(model: AbstractLabelModel, encoder: AbstractEncoder, generator: AbstractGenerator, parsed_dataset: ParsedDataset, run: Any) -> Tuple[dict, dict]:
+def eval_model(
+    model: AbstractLabelModel, encoder: AbstractEncoder, generator: AbstractGenerator, parsed_dataset: ParsedDataset, run: Any, metrics_to_skip: Optional[List[str]] = None
+) -> Tuple[dict, dict]:
     result = {"train": {}, "test": {}, "eval": {}}
     predictions = {"train": {}, "test": {}, "eval": {}}
 
@@ -76,7 +78,7 @@ def eval_model(model: AbstractLabelModel, encoder: AbstractEncoder, generator: A
                 "category": summary,
             }
 
-        metrics = Metrics(encoder, generator, batch_size=64)
+        metrics = Metrics(encoder, generator, batch_size=64, metrics_to_skip=metrics_to_skip)
         metrics_result = metrics.calculate_metrics(true_labels, generated_labels, texts, reference_texts, generated_texts, reference_summaries, generated_summaries)
         result[split_name] = metrics_result
 

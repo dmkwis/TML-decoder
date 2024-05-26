@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from rouge_score import rouge_scorer
 from tqdm import tqdm
@@ -8,16 +8,18 @@ from tml_decoder.generators.abstract_generator import AbstractGenerator
 
 
 class Metrics:
-    def __init__(self, encoder: AbstractEncoder, generator: AbstractGenerator, batch_size: int = 8):
+    def __init__(self, encoder: AbstractEncoder, generator: AbstractGenerator, batch_size: int = 8, metrics_to_skip: Optional[List[str]] = None):
         self.encoder = encoder
         self.generator = generator
         self.batch_size = batch_size
+        self.metrics_to_skip = metrics_to_skip if metrics_to_skip is not None else []
 
     def calculate_cosine_similarity(self, true_labels: List[str], generated_labels: List[str], texts: List[List[str]]) -> Dict[str, List[float]]:
         cos_sim_for_ground_truth = []
         cos_sim_for_avg_emb = []
 
         num_samples = len(true_labels)
+        print(self.encoder.device)
         for i in tqdm(range(0, num_samples, self.batch_size), desc="Calculating cosine similarity"):
             batch_true_labels = true_labels[i : i + self.batch_size]
             batch_generated_labels = generated_labels[i : i + self.batch_size]
@@ -83,11 +85,14 @@ class Metrics:
         return {"precision": avg_precision, "recall": avg_recall, "f1": avg_f1}
 
     def calculate_metrics(self, true_labels, generated_labels, texts, reference_texts, generated_texts, reference_summaries, generated_summaries):
-        cosine_similarity = self.calculate_cosine_similarity(true_labels, generated_labels, texts)
-        perplexity = self.calculate_perplexity(reference_texts, generated_texts)
-        rouge_n = self.evaluate_rouge_n(reference_summaries, generated_summaries)
-        return {
-            "cosine_similarity": cosine_similarity,
-            "perplexity": perplexity,
-            "rouge_n": rouge_n,
-        }
+        metrics_result = {}
+
+        if "cosine_similarity" not in self.metrics_to_skip:
+            metrics_result["cosine_similarity"] = self.calculate_cosine_similarity(true_labels, generated_labels, texts)
+
+        if "perplexity" not in self.metrics_to_skip:
+            metrics_result["perplexity"] = self.calculate_perplexity(reference_texts, generated_texts)
+
+        if "rouge_n" not in self.metrics_to_skip:
+            metrics_result["rouge_n"] = self.evaluate_rouge_n(reference_summaries, generated_summaries)
+        return metrics_result

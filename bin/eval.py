@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, List, Optional
 
 from dotenv import load_dotenv
 import fire
@@ -14,7 +14,7 @@ load_dotenv()
 run = initialize_neptune_run()
 
 
-def main(model_name: str, dataset_path: str, encoder_name: str, *args: Any, **kwargs: Any) -> None:
+def main(model_name: str, dataset_path: str, encoder_name: str, metrics_to_skip: Optional[List[str]] = None, *args: Any, **kwargs: Any) -> None:
     run["dataset_path"] = dataset_path
     run["parameters"] = {
         "model_name": model_name,
@@ -28,7 +28,7 @@ def main(model_name: str, dataset_path: str, encoder_name: str, *args: Any, **kw
     model = common_utils.get_model(model_name, encoder, *args, **kwargs)
     dataset = read_dataset(dataset_path)
 
-    results, predictions = eval_model(model, encoder, generator, dataset, run)
+    results, predictions = eval_model(model, encoder, generator, dataset, run, metrics_to_skip)
 
     print(f"Metrics for {model.name}: ", results)
 
