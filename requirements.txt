@@ -11,4 +11,5 @@ neptune==1.9.1
 pytest==8.1.1
 rouge-score==0.1.2
 pre-commit==3.7.1
+optuna==3.6.1
 -e .

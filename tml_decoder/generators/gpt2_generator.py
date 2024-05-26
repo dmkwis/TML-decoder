@@ -1,3 +1,5 @@
+from typing import List
+
 import torch
 from transformers import AutoTokenizer, GPT2LMHeadModel
 
@@ -11,6 +13,7 @@ class GPT2Generator(AbstractGenerator):
         self.num_gens = num_gens
         self.device = device
         self.gpt_tokenizer = AutoTokenizer.from_pretrained("openai-community/gpt2")
+        self.gpt_tokenizer.pad_token = self.gpt_tokenizer.eos_token  # Set pad_token to eos_token
         self.generator = GPT2LMHeadModel.from_pretrained("openai-community/gpt2").to(self.device)
         self.generator.eval()
 
@@ -39,23 +42,21 @@ class GPT2Generator(AbstractGenerator):
     def get_tokenizer(self):
         return self.gpt_tokenizer
 
-    def calculate_perplexity(self, text: str) -> float:
-        tokens = self.gpt_tokenizer.encode(text, return_tensors="pt").to(self.device)
-        with torch.no_grad():
-            # Chunking for long texts
-            chunks = [tokens[0][i : i + self.generator.config.n_positions] for i in range(0, tokens.size(1), self.generator.config.n_positions - 1)]
-            total_loss = 0
-            for chunk in chunks:
-                inputs = chunk.unsqueeze(0)
-                outputs = self.generator(inputs, labels=inputs)
-                total_loss += outputs.loss.item() * chunk.size(0)
+    def calculate_perplexity(self, texts: List[str], batch_size: int = 8) -> List[float]:
+        all_perplexities = []
+        num_batches = (len(texts) + batch_size - 1) // batch_size
 
-            if tokens.size(1) > 0:
-                avg_loss = total_loss / tokens.size(1)
-                perplexity = torch.exp(torch.tensor(avg_loss)).item()
-            else:
-                perplexity = float("inf")  # or some suitable default for empty text
-            return perplexity
+        for i in range(num_batches):
+            batch_texts = texts[i * batch_size : (i + 1) * batch_size]
+            batch_tokenized = self.gpt_tokenizer(batch_texts, return_tensors="pt", padding=True, truncation=True).to(self.device)
+
+            with torch.no_grad():
+                outputs = self.generator(**batch_tokenized, labels=batch_tokenized["input_ids"])
+                batch_loss = outputs.loss
+                perplexity = torch.exp(batch_loss).item()
+                all_perplexities.extend([perplexity] * len(batch_texts))
+
+        return all_perplexities
 
     @property
     def name(self):

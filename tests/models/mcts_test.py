@@ -1,16 +1,8 @@
 import pytest
 
+from tml_decoder.encoders.mock_encoder import MockEncoder
+from tml_decoder.generators.mock_generator import MockGenerator
 from tml_decoder.models.mcts_model import MCTSModel, Node
-
-
-@pytest.fixture
-def mock_encoder(mocker):
-    return mocker.Mock()
-
-
-@pytest.fixture
-def mock_generator(mocker):
-    return mocker.Mock()
 
 
 @pytest.fixture
@@ -19,11 +11,11 @@ def mock_guide(mocker):
 
 
 @pytest.fixture
-def mcts_model(mock_encoder, mock_generator, mock_guide):
+def mcts_model(mock_guide):
     initial_prompt = "These documents describe"
     model = MCTSModel(
-        encoder=mock_encoder,
-        generator=mock_generator,
+        encoder=MockEncoder(),
+        generator=MockGenerator(),
         guide=mock_guide,
         iter_num=10,
         max_len=100,
