@@ -15,11 +15,13 @@ class Metrics:
         self.metrics_to_skip = metrics_to_skip if metrics_to_skip is not None else []
 
     def calculate_cosine_similarity(self, true_labels: List[str], generated_labels: List[str], texts: List[List[str]]) -> Dict[str, List[float]]:
+        if "cosine_similarity" in self.metrics_to_skip:
+            return {}
+
         cos_sim_for_ground_truth = []
         cos_sim_for_avg_emb = []
 
         num_samples = len(true_labels)
-        print(self.encoder.device)
         for i in tqdm(range(0, num_samples, self.batch_size), desc="Calculating cosine similarity"):
             batch_true_labels = true_labels[i : i + self.batch_size]
             batch_generated_labels = generated_labels[i : i + self.batch_size]
@@ -41,17 +43,19 @@ class Metrics:
             "cos_sim_for_avg_emb": cos_sim_for_avg_emb,
         }
 
-    def calculate_perplexity(self, reference_texts: List[str], generated_texts: List[str], batch_size: int = 8) -> Dict[str, List[float]]:
+    def calculate_perplexity(self, reference_texts: List[str], generated_texts: List[str]) -> Dict[str, List[float]]:
+        if "perplexity" in self.metrics_to_skip:
+            return {}
         reference_perplexities = []
         generated_perplexities = []
 
         num_samples = len(reference_texts)
-        for i in tqdm(range(0, num_samples, batch_size), desc="Calculating perplexity"):
-            batch_reference_texts = reference_texts[i : i + batch_size]
-            batch_generated_texts = generated_texts[i : i + batch_size]
+        for i in tqdm(range(0, num_samples, self.batch_size), desc="Calculating perplexity"):
+            batch_reference_texts = reference_texts[i : i + self.batch_size]
+            batch_generated_texts = generated_texts[i : i + self.batch_size]
 
-            batch_reference_perplexities = [self.generator.calculate_perplexity(text) for text in batch_reference_texts]
-            batch_generated_perplexities = [self.generator.calculate_perplexity(text) for text in batch_generated_texts]
+            batch_reference_perplexities = self.generator.calculate_perplexity(batch_reference_texts, batch_size=self.batch_size)
+            batch_generated_perplexities = self.generator.calculate_perplexity(batch_generated_texts, batch_size=self.batch_size)
 
             reference_perplexities.extend(batch_reference_perplexities)
             generated_perplexities.extend(batch_generated_perplexities)
@@ -61,7 +65,7 @@ class Metrics:
             "generated_perplexity": generated_perplexities,
         }
 
-    def evaluate_rouge_n(self, reference_summaries: List[str], generated_summaries: List[str], n: int = 1) -> Dict[str, float]:
+    def calculate_rouge_n(self, reference_summaries: List[str], generated_summaries: List[str], n: int = 1) -> Dict[str, float]:
         """
         Evaluate ROUGE-N score for a set of generated summaries against reference summaries.
 
@@ -73,6 +77,8 @@ class Metrics:
         Returns:
         - A dictionary containing the average ROUGE-N precision, recall, and F1 score.
         """
+        if "rouge_n" in self.metrics_to_skip:
+            return {}
         scorer = rouge_scorer.RougeScorer([f"rouge{n}"], use_stemmer=True)
         scores = []
         for reference, generated in zip(reference_summaries, generated_summaries):
@@ -94,5 +100,5 @@ class Metrics:
             metrics_result["perplexity"] = self.calculate_perplexity(reference_texts, generated_texts)
 
         if "rouge_n" not in self.metrics_to_skip:
-            metrics_result["rouge_n"] = self.evaluate_rouge_n(reference_summaries, generated_summaries)
+            metrics_result["rouge_n"] = self.calculate_rouge_n(reference_summaries, generated_summaries)
         return metrics_result

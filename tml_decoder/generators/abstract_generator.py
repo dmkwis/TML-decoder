@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod, abstractproperty
+from typing import List
 
 
 class AbstractGenerator(ABC):
@@ -11,7 +12,7 @@ class AbstractGenerator(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def calculate_perplexity(self, text: str):
+    def calculate_perplexity(self, texts: List[str], batch_size: int) -> List[float]:
         raise NotImplementedError
 
     @abstractproperty

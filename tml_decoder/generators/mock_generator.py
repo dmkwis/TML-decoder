@@ -1,3 +1,5 @@
+from typing import List
+
 from tml_decoder.generators.abstract_generator import AbstractGenerator
 
 
@@ -9,8 +11,8 @@ class MockGenerator(AbstractGenerator):
     def get_tokenizer(self):
         return "tokenizer"
 
-    def calculate_perplexity(self, text: str):
-        return 5.0
+    def calculate_perplexity(self, texts: List[str], batch_size: int = 8) -> List[float]:
+        return [1.0] * len(texts)
 
     @property
     def name(self):

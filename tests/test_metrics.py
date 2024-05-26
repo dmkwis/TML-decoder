@@ -72,8 +72,8 @@ class TestMetrics:
             # Add more test cases as needed
         ],
     )
-    def test_evaluate_rouge_n(self, metrics, references, candidates, n, expected):
-        result = metrics.evaluate_rouge_n(references, candidates, n)
+    def test_calculate_rouge_n(self, metrics, references, candidates, n, expected):
+        result = metrics.calculate_rouge_n(references, candidates, n)
         assert result["precision"] == expected["precision"], f"Expected precision {expected['precision']}, got {result['precision']}"
         assert result["recall"] == expected["recall"], f"Expected recall {expected['recall']}, got {result['recall']}"
         assert result["f1"] == expected["f1"], f"Expected f1 {expected['f1']}, got {result['f1']}"
