@@ -49,21 +49,22 @@ def _generate_summary(client: OpenAI, docs: List[str], keyword: str) -> str:
     joined_docs = "\n".join(docs)
 
     response = client.chat.completions.create(
-        model="gpt-4-1106-preview",
+        model="gpt-4o",
         messages=[
             {
                 "role": "system",
                 "content": """
-                You have a collection of scientific articles, each separated by a new line.
-                Generate a concise summary that encompasses the key insights from all the articles collectively.
+                You have a collection of scientific articles that are tagged with a keyword inside [] brackets, each article is separated by a new line.
+                Generate a concise summary that encompasses the key insights from all the articles collectively and includes keyword that is inside [] brackets.
                 Your summary should capture the overarching themes, main findings, and notable points discussed across the articles.
                 Focus on summary of all of them at once, not individual articles. Write a summary that is only a couple of words long.
                 Respond ONLY with the summary of the articles. Remember to be very concise and capture the key insights. It has to be descriptive and human friendly.
-                Please note that the provided articles are only a sample of the entire collection that are related to single, unknown to you keyword.
+                Please note that the provided articles are only a sample of the entire collection that are related to single keyword that is inside [] brackets at the beginning of the message.
                 """,
             },
-            {"role": "user", "content": joined_docs},
+            {"role": "user", "content": f"[{keyword}]:\n{joined_docs}"},
         ],
+
     )
 
     response = response.choices[0].message.content
