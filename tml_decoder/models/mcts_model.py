@@ -31,7 +31,12 @@ class Node:
         self.children = {}
         self.visits = 0
         self.value = 0  # Value for MCTS search
-        self.score = encoder.similarity(encoder.encode(self.state), target_embedding) + perplexity_weight * generator.calculate_perplexity([self.state])[0]
+        self.encoder = encoder
+        self.generator = generator
+        self.target_embedding = target_embedding
+        self.perplexity_weight = perplexity_weight
+        self.similarity = None
+        self.perplexity = None
 
     def get_unexplored_states(self):
         return list(set(self.all_states).difference(self.children.keys()))
@@ -42,8 +47,18 @@ class Node:
     def get_all_states(self):
         return self.all_states
 
+    def get_similarity(self):
+        if self.similarity is None:
+            self.similarity = self.encoder.similarity(self.encoder.encode(self.state), self.target_embedding)
+        return self.similarity
+
+    def get_perplexity(self):
+        if self.perplexity is None:
+            self.perplexity = self.generator.calculate_perplexity([self.state])[0]
+        return self.perplexity
+
     def get_score(self):
-        return self.score
+        return self.get_similarity() + self.perplexity_weight * self.get_perplexity()
 
     def best_uct(self):
         exploration_weight = 1.41  # Adjust this parameter as needed
@@ -128,17 +143,36 @@ class MCTSModel(AbstractLabelModel):
             result = self.simulate(node)
             self.backpropagate(node, result)
 
+        def prepare_batch_encoding_and_perplexity(node):
+            if len(node.children.values()) == 0:
+                return
+            self.encoder.add_to_lazy_batch_args(node.state)
+            self.generator.add_to_lazy_batch_args(node.state)
+
+        def batch_calculate_similarity(node, encoding_mapping, perplexity_mapping):
+            if len(node.children.values()) == 0:
+                return
+            emb = encoding_mapping[node.state]
+            node.similarity = self.encoder.similarity(emb, self.target_embedding)
+            node.perplexity = perplexity_mapping[node.state]
+
         def find_best_state(node):
             if len(node.children.values()) == 0:
                 return node
             best_from_kids = max(
                 map(lambda n: find_best_state(n), node.children.values()),
-                key=lambda x: x.score,
+                key=lambda x: x.get_score(),
             )
-            if len(node.state) > self.min_result_len and node.score > best_from_kids.score:
+            if len(node.state) > self.min_result_len and node.get_score() > best_from_kids.get_score():
                 return node
             return best_from_kids
 
+        self.encoder.reset_lazy_batch_args()
+        self.generator.reset_lazy_batch_args()
+        prepare_batch_encoding_and_perplexity(root_node)
+        encoding_mapping = self.encoder.encode_lazy_batch()
+        perplexity_mapping = self.generator.calculate_perplexity_lazy_batch()
+        batch_calculate_similarity(root_node, encoding_mapping, perplexity_mapping)
         return find_best_state(root_node).state
 
     def get_label(self, texts: List[str]) -> str:
