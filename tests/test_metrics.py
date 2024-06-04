@@ -27,10 +27,8 @@ class TestMetrics:
 
         assert "cos_sim_for_ground_truth" in result
         assert "cos_sim_for_avg_emb" in result
-        assert len(result["cos_sim_for_ground_truth"]) == len(true_labels)
-        assert len(result["cos_sim_for_avg_emb"]) == len(true_labels)
-        assert all(isinstance(x, float) for x in result["cos_sim_for_ground_truth"])
-        assert all(isinstance(x, float) for x in result["cos_sim_for_avg_emb"])
+        assert isinstance(result["cos_sim_for_ground_truth"], float)
+        assert isinstance(result["cos_sim_for_avg_emb"], float)
 
     def test_calculate_perplexity(self, metrics):
         reference_texts = ["This is a test.", "Another test sentence."]
@@ -38,10 +36,10 @@ class TestMetrics:
 
         result = metrics.calculate_perplexity(reference_texts, generated_texts)
 
-        assert "reference_perplexity" in result
-        assert "generated_perplexity" in result
-        assert all(isinstance(x, float) for x in result["reference_perplexity"])
-        assert all(isinstance(x, float) for x in result["generated_perplexity"])
+        assert "avg_reference_perplexity" in result
+        assert "avg_generated_perplexity" in result
+        assert isinstance(result["avg_reference_perplexity"], float)
+        assert isinstance(result["avg_generated_perplexity"], float)
 
     @pytest.mark.parametrize(
         "references, candidates, n, expected",

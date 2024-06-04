@@ -14,7 +14,7 @@ class Metrics:
         self.batch_size = batch_size
         self.metrics_to_skip = metrics_to_skip if metrics_to_skip is not None else []
 
-    def calculate_cosine_similarity(self, true_labels: List[str], generated_labels: List[str], texts: List[List[str]]) -> Dict[str, List[float]]:
+    def calculate_cosine_similarity(self, true_labels: List[str], generated_labels: List[str], texts: List[List[str]]) -> Dict[str, float]:
         if "cosine_similarity" in self.metrics_to_skip:
             return {}
 
@@ -38,12 +38,15 @@ class Metrics:
                 cos_sim_for_ground_truth.append(cos_sim_gt)
                 cos_sim_for_avg_emb.append(cos_sim_avg)
 
+        avg_cos_sim_gt = sum(cos_sim_for_ground_truth) / len(cos_sim_for_ground_truth)
+        avg_cos_sim_avg_emb = sum(cos_sim_for_avg_emb) / len(cos_sim_for_avg_emb)
+
         return {
-            "cos_sim_for_ground_truth": cos_sim_for_ground_truth,
-            "cos_sim_for_avg_emb": cos_sim_for_avg_emb,
+            "cos_sim_for_ground_truth": avg_cos_sim_gt,
+            "cos_sim_for_avg_emb": avg_cos_sim_avg_emb,
         }
 
-    def calculate_perplexity(self, reference_texts: List[str], generated_texts: List[str]) -> Dict[str, List[float]]:
+    def calculate_perplexity(self, reference_texts: List[str], generated_texts: List[str]) -> Dict[str, float]:
         if "perplexity" in self.metrics_to_skip:
             return {}
         reference_perplexities = []
@@ -60,9 +63,12 @@ class Metrics:
             reference_perplexities.extend(batch_reference_perplexities)
             generated_perplexities.extend(batch_generated_perplexities)
 
+        avg_reference_perplexity = sum(reference_perplexities) / len(reference_perplexities)
+        avg_generated_perplexity = sum(generated_perplexities) / len(generated_perplexities)
+
         return {
-            "reference_perplexity": reference_perplexities,
-            "generated_perplexity": generated_perplexities,
+            "avg_reference_perplexity": avg_reference_perplexity,
+            "avg_generated_perplexity": avg_generated_perplexity,
         }
 
     def calculate_rouge_n(self, reference_summaries: List[str], generated_summaries: List[str], n: int = 1) -> Dict[str, float]:
