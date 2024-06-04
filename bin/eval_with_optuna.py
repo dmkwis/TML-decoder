@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Any
+from typing import Any, List
 
 from dotenv import load_dotenv
 import fire
@@ -10,6 +10,7 @@ from tml_decoder.encoders.abstract_encoder import AbstractEncoder
 from tml_decoder.eval_functions import eval_model, initialize_neptune_run, read_dataset
 from tml_decoder.generators.abstract_generator import AbstractGenerator
 import tml_decoder.utils.common_utils as common_utils
+from tml_decoder.models.mcts_model import MCTSModel
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
@@ -17,6 +18,7 @@ load_dotenv()
 
 assert os.getenv("NEPTUNE_PROJECT") and os.getenv("NEPTUNE_API_TOKEN")
 
+initial_prompts = ["This cluster describe", "These documents are about"]
 
 def objective(trial: optuna.Trial, dataset_path: str, model_name: str, encoder: AbstractEncoder, generator: AbstractGenerator, study_name: str) -> float:
     run = initialize_neptune_run()
@@ -24,16 +26,27 @@ def objective(trial: optuna.Trial, dataset_path: str, model_name: str, encoder: 
     run["parameters/study_name"] = study_name
 
     # Example hyperparameter space
-    param1 = trial.suggest_float("param1", 0.0, 1.0)
-    param2 = trial.suggest_int("param2", 1, 100)
+    exploration_weight = trial.suggest_float("exploration_weight", 0.5, 2.0)
+    perplexity_weight = trial.suggest_float("perplexity_weight", 1e-5, 1e-3)
+    initial_prompt = trial.suggest_categorical("initial_prompt", initial_prompts)
 
-    model = common_utils.get_model(model_name, encoder, param1=param1, param2=param2)
+    model = MCTSModel(
+        encoder=encoder,
+        generator=generator,
+        guide=common_utils.get_guide("random", encoder),
+        iter_num=10,
+        max_len=100,
+        min_result_len=40,
+        initial_prompt=initial_prompt,
+        exploration_weight=exploration_weight,
+        perplexity_weight=perplexity_weight,
+    )
+
     dataset = read_dataset(dataset_path)
 
     results, predictions = eval_model(model, encoder, generator, dataset, run)
 
-    # Example: using average cosine similarity on test split as the objective value
-    objective_value = results["val"]["cosine_similarity"]["avg_cos_sim_for_ground_truth"]
+    objective_value = results["eval"]["cosine_similarity"]["cos_sim_for_avg_emb"]
 
     run["results"] = results
     run["predictions"] = predictions
@@ -47,8 +60,10 @@ def objective(trial: optuna.Trial, dataset_path: str, model_name: str, encoder: 
 def tune_hyperparameters(
     study_name: str, model_name: str, dataset_path: str, encoder_name: str, direction: str = "minimize", n_trials: int = 100, *args: Any, **kwargs: Any
 ) -> None:
-    study = optuna.create_study(direction=direction)
 
+    storage_name = "sqlite:///{}.db".format(study_name)
+    study = optuna.create_study(study_name=study_name, storage=storage_name, direction=direction, load_if_exists=True)
+    
     encoder = common_utils.get_encoder(encoder_name)
     generator = common_utils.get_generator("gpt2")
 
