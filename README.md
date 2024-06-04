@@ -16,8 +16,7 @@ cp .env.default .env
 
 The project uses pre-commit hooks to ensure that code standards are maintained. The main configuration for pre-commit hooks is defined in `.pre-commit-config.yaml`. This file specifies the hooks for `ruff`, `black`, and `isort`. The configuration for these tools is located in the `pyproject.toml` file. Ensure you have pre-commit installed and set up by running:
 
-bash
-```
+```bash
 pre-commit install
 ```
 This will install the pre-commit hooks into your local repository, ensuring that they are run before each commit to maintain code quality and consistency.
