@@ -13,6 +13,7 @@ from tml_decoder.models.guides.abstract_guide import AbstractGuide
 from tml_decoder.models.guides.random_guide import RandomGuide
 from tml_decoder.models.guides.soft_prompt_guide import SoftPromptGuide
 from tml_decoder.models.mcts_model import MCTSModel
+from tml_decoder.models.transformer_improvement_model import TransformerImprovementModel
 from tml_decoder.models.vec2text_model import Vec2TextModel
 
 ### If you're gonna use any embedder / generator make sure that they're initialized in this file
@@ -118,5 +119,7 @@ def get_model(name: str, encoder: AbstractEncoder, *args: Any, **kwargs: Any) ->
     if name == "beam":
         generator = get_generator("gpt2")
         return BeamSearchModel(encoder, generator, *args, **kwargs)
+    if name == 'transformer_improvement':
+        return TransformerImprovementModel(*args, **kwargs)
 
     raise NotImplementedError(f"Model {name} not implemented")
