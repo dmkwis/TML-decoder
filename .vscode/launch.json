@@ -16,7 +16,9 @@
                 "--dataset_path='dataset/inspec/dataset.jsonl'",
                 "--initial_prompt='These documents describe'",
                 "--max_len=200",
-                "--min_result_len=20",
+                "--min_result_len=50",
+                "--batch_size=8",
+                "--metrics_to_skip='perplexity'",
             ],
             "justMyCode": true
         },

@@ -45,8 +45,7 @@ class Node:
     def get_score(self):
         return self.score
 
-    def best_uct(self):
-        exploration_weight = 1.41  # Adjust this parameter as needed
+    def best_uct(self, exploration_weight):
         ucts = {
             child.state: child.value / (child.visits + 1e-6) + exploration_weight * math.sqrt(math.log(self.visits + 1) / (child.visits + 1e-6)) for child in self.children.values()
         }
@@ -65,6 +64,8 @@ class MCTSModel(AbstractLabelModel):
         min_result_len: int = 3,
         initial_prompt: str = "",
         soft_prompt: bool = False,
+        exploration_weight: float = 1.41,
+        perplexity_weight: float = 1e-4,
     ) -> None:
         super().__init__()
         self.encoder = encoder
@@ -76,6 +77,8 @@ class MCTSModel(AbstractLabelModel):
         self.target_embedding = None
         self.initial_prompt = initial_prompt
         self.soft_prompt = soft_prompt
+        self.exploration_weight = exploration_weight
+        self.perplexity_weight = perplexity_weight
 
     @property
     def name(self):
@@ -91,7 +94,7 @@ class MCTSModel(AbstractLabelModel):
     def expand(self, node):
         unexplored_actions = node.get_unexplored_states()
         new_state = self.guide.choose_next(unexplored_actions, self.target_embedding)
-        child = Node(new_state, self.encoder, self.generator, self.target_embedding, parent=node, soft_prompt=self.soft_prompt)
+        child = Node(new_state, self.encoder, self.generator, self.target_embedding, parent=node, soft_prompt=self.soft_prompt, perplexity_weight=self.perplexity_weight)
         node.children[new_state] = child
         return child
 
@@ -100,14 +103,14 @@ class MCTSModel(AbstractLabelModel):
             if not node.is_fully_expanded():
                 return self.expand(node)
             else:
-                node = node.best_uct()
+                node = node.best_uct(self.exploration_weight)
         return node
 
     def simulate(self, node):
         # Perform a random simulation from the current state and return the result
         while not self.is_terminal_node(node):
             new_state = random.choice(node.get_all_states())
-            new_node = Node(new_state, self.encoder, self.generator, self.target_embedding, node, soft_prompt=self.soft_prompt)
+            new_node = Node(new_state, self.encoder, self.generator, self.target_embedding, node, soft_prompt=self.soft_prompt, perplexity_weight=self.perplexity_weight)
             node.children[new_state] = new_node
             node = new_node
         return node.get_score()
@@ -121,7 +124,7 @@ class MCTSModel(AbstractLabelModel):
     def mcts(self, initial_state, iterations, target_embedding):
         self.guide.reset()
         self.target_embedding = target_embedding
-        root_node = Node(initial_state, self.encoder, self.generator, self.target_embedding, soft_prompt=self.soft_prompt)
+        root_node = Node(initial_state, self.encoder, self.generator, self.target_embedding, soft_prompt=self.soft_prompt, perplexity_weight=self.perplexity_weight)
 
         for _ in tqdm(range(iterations), "MCTS progress"):
             node = self.select_node(root_node)
