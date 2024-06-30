@@ -1,4 +1,5 @@
 import logging
+import time  # Import the time module
 from typing import Any, List, Optional
 
 from dotenv import load_dotenv
@@ -13,8 +14,9 @@ load_dotenv()
 
 run = initialize_neptune_run()
 
-
 def main(model_name: str, dataset_path: str, encoder_name: str, batch_size: int, metrics_to_skip: Optional[List[str]] = None, *args: Any, **kwargs: Any) -> None:
+    start_time = time.time()  # Record the start time
+    
     run["dataset_path"] = dataset_path
     run["parameters"] = {
         "model_name": model_name,
@@ -30,12 +32,16 @@ def main(model_name: str, dataset_path: str, encoder_name: str, batch_size: int,
 
     results, predictions = eval_model(model, encoder, generator, dataset, run, metrics_to_skip, batch_size)
 
+    end_time = time.time()  # Record the end time
+    total_time = end_time - start_time  # Calculate the total duration
+
     print(f"Metrics for {model.name}: ", results)
+    print(f"Total evaluation time: {total_time:.2f} seconds")  # Print the total evaluation time
 
     run["results"] = results
     run["predictions"] = predictions
+    run["total_time"] = total_time  # Save the total time to the Neptune run
     run.stop()
-
 
 if __name__ == "__main__":
     fire.Fire(main)

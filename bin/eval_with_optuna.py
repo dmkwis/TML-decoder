@@ -1,6 +1,7 @@
 import logging
 import os
 from typing import Any, List
+import torch
 
 from dotenv import load_dotenv
 import fire
@@ -18,25 +19,30 @@ load_dotenv()
 
 assert os.getenv("NEPTUNE_PROJECT") and os.getenv("NEPTUNE_API_TOKEN")
 
-initial_prompts = ["This cluster describe", "These documents are about"]
+initial_prompts = ["Articles", "These documents are about"]
 
 def objective(trial: optuna.Trial, dataset_path: str, model_name: str, encoder: AbstractEncoder, generator: AbstractGenerator, study_name: str) -> float:
     run = initialize_neptune_run()
     run["parameters/trial_number"] = trial.number
     run["parameters/study_name"] = study_name
 
-    # Example hyperparameter space
     exploration_weight = trial.suggest_float("exploration_weight", 0.5, 2.0)
-    perplexity_weight = trial.suggest_float("perplexity_weight", 1e-5, 1e-3)
+    perplexity_weight = trial.suggest_float("perplexity_weight", 1e-5, 1e-1)
     initial_prompt = trial.suggest_categorical("initial_prompt", initial_prompts)
 
+    proposed_params = {
+        "exploration_weight": exploration_weight,
+        "perplexity_weight": perplexity_weight,
+        "initial_prompt": initial_prompt,
+    }
+    
     model = MCTSModel(
         encoder=encoder,
         generator=generator,
         guide=common_utils.get_guide("random", encoder),
         iter_num=10,
-        max_len=100,
-        min_result_len=40,
+        max_len=150,
+        min_result_len=100,
         initial_prompt=initial_prompt,
         exploration_weight=exploration_weight,
         perplexity_weight=perplexity_weight,
@@ -44,15 +50,25 @@ def objective(trial: optuna.Trial, dataset_path: str, model_name: str, encoder: 
 
     dataset = read_dataset(dataset_path)
 
-    results, predictions = eval_model(model, encoder, generator, dataset, run)
+    try:
+        results, predictions = eval_model(model, encoder, generator, dataset, run, metrics_to_skip=["perplexity", "rouge_n"])
+        # Example: using average cosine similarity on test split as the objective value
+        objective_value = results["eval"]["cosine_similarity"]["cos_sim_for_avg_emb"]
 
-    objective_value = results["eval"]["cosine_similarity"]["cos_sim_for_avg_emb"]
-
-    run["results"] = results
-    run["predictions"] = predictions
-    run["objective_value"] = objective_value
-
-    run.stop()
+        run["results"] = results
+        run["predictions"] = predictions
+        run["objective_value"] = objective_value
+        run["proposed_params"] = proposed_params
+        
+    except RuntimeError as e:
+        if "CUDA out of memory" in str(e):
+            logging.warning("CUDA out of memory. Skipping this trial.")
+            objective_value = float('-inf')
+        else:
+            raise e
+    finally:
+        run.stop()
+        torch.cuda.empty_cache()  # Clear GPU memory after each trial
 
     return objective_value
 
